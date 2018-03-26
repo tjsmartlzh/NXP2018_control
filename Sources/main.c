@@ -3,8 +3,7 @@
 
 
 int main(void) {
-  volatile int i = 0;
-
+	
   
 
 
