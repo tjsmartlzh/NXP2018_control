@@ -20,51 +20,51 @@ float   pram[4];
 uint8_t Lampe_test;
 extern int ccd_threshold;
 extern uint8_t Reverse_finish;
-extern uint8_t RC__flag;
+//extern uint8_t RC__flag;
 void LINFlex_TX(unsigned char data)
 {
 	LINFLEX_0.BDRL.B.DATA0 = data;       //发送语句
 	while(!LINFLEX_0.UARTSR.B.DTF){}
 	LINFLEX_0.UARTSR.B.DTF = 1;
 }
-void UARTitosTX (int n)
-{
-  int i,j,sign;
-  char s[10];
-  if((sign=n)<0)//记录符号
-  n=-n;//使n成为正数
-  i=0;
-  do{
-       s[i++]=n%10+'0';//取下一个数字
-  }
-  while ((n/=10)>0);//删除该数字
-  if(sign<0)
-  s[i++]='-';
-  s[i]='\0';
-  for(j=i;j>=0;j--)//生成的数字是逆序的，所以要逆序输出
-	  LINFlex_TX(s[j]);
-}
+//void UARTitosTX (int n)
+//{
+//  int i,j,sign;
+//  char s[10];
+//  if((sign=n)<0)//记录符号
+//  n=-n;//使n成为正数
+//  i=0;
+//  do{
+//       s[i++]=n%10+'0';//取下一个数字
+//  }
+//  while ((n/=10)>0);//删除该数字
+//  if(sign<0)
+//  s[i++]='-';
+//  s[i]='\0';
+//  for(j=i;j>=0;j--)//生成的数字是逆序的，所以要逆序输出
+//	  LINFlex_TX(s[j]);
+//}
 
-char* Int_to_char(int n)
-{
-	int i,j,sign;
-	char temp[10];
-	char s[10];
-	if((sign=n)<0)//记录符号
-		n=-n;//使n成为正数
-	i=0;
-	do{
-		temp[i++]=n%10+'0';//取下一个数字
-	}
-	while ((n/=10)>0);//删除该数字
-	if(sign<0)
-		temp[i++]='-';
-	temp[i]='\0';
-	for(j = 0;j<i;j++)
-		s[j] = temp[i-j-1];
-	s[j] = '\0';
-	return s;
-}
+//char* Int_to_char(int n)
+//{
+//	int i,j,sign;
+//	char temp[10];
+//	char s[10];
+//	if((sign=n)<0)//记录符号
+//		n=-n;//使n成为正数
+//	i=0;
+//	do{
+//		temp[i++]=n%10+'0';//取下一个数字
+//	}
+//	while ((n/=10)>0);//删除该数字
+//	if(sign<0)
+//		temp[i++]='-';
+//	temp[i]='\0';
+//	for(j = 0;j<i;j++)
+//		s[j] = temp[i-j-1];
+//	s[j] = '\0';
+//	return s;
+//}
 void f2s(float f, char* str)
 {
 	
@@ -147,9 +147,9 @@ void LINFlex_RX(void)
 //		points[4]=data[1]-'0';
 //		points[5]=data[2]-'0';
 //		reverse_target_distance=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/100.0f;
-		if (Reverse_finish&&(!RC__flag)) Start_line_flag=1;
-		GPIO__output__enable(15);
-        SIU.GPDO[15].B.PDO=0;
+//		if (Reverse_finish&&(!RC__flag)) Start_line_flag=1;
+//		GPIO__output__enable(15);
+//        SIU.GPDO[15].B.PDO=0;
 //		Reverse_flag=1;
 	break;
 	case 'x':
@@ -172,14 +172,14 @@ void LINFlex_RX(void)
 		pramdata[0]=data[0]-'0';
 		pramdata[1]=data[1]-'0';
 		pramdata[2]=data[2]-'0';
-		pram[0]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+		pram[0]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000);
 	break;
 	case 'B':
 		//B1
 		pramdata[3]=data[0]-'0';
 		pramdata[4]=data[1]-'0';
 		pramdata[5]=data[2]-'0';
-		pram[1]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000);
 	break;
 	case 'C': 
 		//K2
@@ -239,7 +239,7 @@ void LINFlex_RX(void)
 	break;
 	case'c':
 		//用于确定CCD的阈值
-        ccd_threshold = ((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//        ccd_threshold = ((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
     break;
 	default:
 		initLINFlex_0_UART(12);

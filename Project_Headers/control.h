@@ -24,11 +24,13 @@ typedef struct motor
 	float angel;
 	float target_distance;
 	float target_angel;
-}motor[4];  //0->nw; 1->ne; 2->sw; 3->se
+};
 
-void vertical(struct motor t[],uint8_t speed_y);
-void horizontal(struct motor t[],uint8_t speed_x);
-void rotating(struct motor t[],uint8_t angular_speed);
+ //0->nw; 1->ne; 2->sw; 3->se
+//struct motor Motor[4];  //0->nw; 1->ne; 2->sw; 3->se
+void vertical_output(struct motor t[],uint8_t speed_y);
+void horizontal_output(struct motor t[],uint8_t speed_x);
+void rotating_output(struct motor t[],uint8_t angular_speed);
 void motor_output(struct motor motor , float duty);
 void motor_config(struct motor motor[],EMIOSn_CH forward_ch[],EMIOSn_CH backward_ch[]);
 

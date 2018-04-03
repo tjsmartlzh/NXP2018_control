@@ -6,14 +6,15 @@
  */
 
 #include "control.h"
-#include "pwm.h" 
-void vertical(struct motor t[],uint8_t duty_y) //向前为正，向后为负
+//#include "pwm.h" 
+struct motor Motor[4];  //0->nw; 1->ne; 2->sw; 3->se
+void vertical_output(struct motor t[],uint8_t speed_y) //向前为正，向后为负
 {
 	int i=0;
-	t[0].duty = duty_y;
-	t[1].duty = duty_y;
-	t[2].duty = duty_y;
-	t[3].duty = duty_y;
+	t[0].duty = speed_y;
+	t[1].duty = speed_y;
+	t[2].duty = speed_y;
+	t[3].duty = speed_y;
 	for(i=0;i<4;i++)
 	{
 		if(t[i].duty>=1) t[i].duty = 1.0f;
@@ -22,13 +23,13 @@ void vertical(struct motor t[],uint8_t duty_y) //向前为正，向后为负
 	}
 }
 
-void horizontal(struct motor t[],uint8_t duty_x)  //向右为正，向左为负
+void horizontal_output(struct motor t[],uint8_t speed_x)  //向右为正，向左为负
 {
 	int i=0;
-	t[0].duty = duty_x;
-	t[1].duty = -duty_x;
-	t[2].duty = -duty_x;
-	t[3].duty = duty_x;
+	t[0].duty = speed_x;
+	t[1].duty = -speed_x;
+	t[2].duty = -speed_x;
+	t[3].duty = speed_x;
 	for(i=0;i<4;i++)
 	{
 		if(t[i].duty>=1) t[i].duty = 1.0f;
@@ -37,13 +38,13 @@ void horizontal(struct motor t[],uint8_t duty_x)  //向右为正，向左为负
 	}
 }
 
-void rotating(struct motor t[],uint8_t angular_duty)  //顺时针为正，逆时针为负
+void rotating_output(struct motor t[],uint8_t angular_speed)  //顺时针为正，逆时针为负
 {
 	int i=0;
-	t[0].duty = -angular_duty * (half_track_distance + half_wheelbase);
-	t[1].duty = angular_duty * (half_track_distance + half_wheelbase);
-	t[2].duty = -angular_duty * (half_track_distance + half_wheelbase);
-	t[3].duty = angular_duty * (half_track_distance + half_wheelbase);
+	t[0].duty = -angular_speed * (half_track_distance + half_wheelbase);
+	t[1].duty = angular_speed * (half_track_distance + half_wheelbase);
+	t[2].duty = -angular_speed * (half_track_distance + half_wheelbase);
+	t[3].duty = angular_speed * (half_track_distance + half_wheelbase);
 	for(i=0;i<4;i++)
 	{
 		if(t[i].duty>=1) t[i].duty = 1.0f;
