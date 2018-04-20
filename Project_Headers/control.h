@@ -13,7 +13,7 @@
 #include "pwm.h"
 #define half_track_distance 10 //°ëÂÖ¾à
 #define half_wheelbase 10  //°ëÖá¾à
-typedef struct motor
+typedef struct
 {
 	EMIOSn_CH forward_ch;
     EMIOSn_CH backward_ch;
@@ -24,14 +24,13 @@ typedef struct motor
 	float angel;
 	float target_distance;
 	float target_angel;
-};
+}Motor_t,*motor;
 
  //0->nw; 1->ne; 2->sw; 3->se
 //struct motor Motor[4];  //0->nw; 1->ne; 2->sw; 3->se
-void vertical_output(struct motor t[],uint8_t speed_y);
-void horizontal_output(struct motor t[],uint8_t speed_x);
-void rotating_output(struct motor t[],uint8_t angular_speed);
-void motor_output(struct motor motor , float duty);
-void motor_config(struct motor motor[],EMIOSn_CH forward_ch[],EMIOSn_CH backward_ch[]);
-
+void vertical_output(motor t[],uint8_t speed_y);
+void horizontal_output(motor t[],uint8_t speed_x);
+void rotating_output(motor t[],uint8_t angular_speed);
+void motor_output(motor t , float duty);
+void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch);
 #endif /* ACTION_H_ */
