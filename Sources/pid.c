@@ -23,7 +23,7 @@ void PID__config(pid_object_t pid, float kp, float ki, float kd,
 	pid->ierror_max = ierror_max;
 
 	pid->Kd = kd / pid->period_sec;
-	pid->derror = 0.0f;
+	pid->derror = 0.0f;	
 	pid->derror_max = derror_max;
 	
 	pid->_output = 0.0f;

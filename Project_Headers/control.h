@@ -17,12 +17,13 @@ typedef struct
 {
 	EMIOSn_CH forward_ch;
     EMIOSn_CH backward_ch;
+    pid_t motor_pid;
 	float target_speed;
 	float actual_speed;
 	float duty;
-	float distance;
+	float x_distance;
 	float angel;
-	float target_distance;
+	float y_distance;
 	float target_angel;
 }Motor_t,*motor;
 
@@ -33,4 +34,6 @@ void horizontal_output(motor t[],uint8_t speed_x);
 void rotating_output(motor t[],uint8_t angular_speed);
 void motor_output(motor t , float duty);
 void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch);
+void x_control_update(motor Motor[]);
+void y_control_update(motor Motor[]);
 #endif /* ACTION_H_ */

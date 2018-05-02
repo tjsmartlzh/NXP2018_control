@@ -9,7 +9,7 @@
 #include"stdlib.h"
 #include "IntcInterrupts.h"
 #include "gpio.h"
-float Radius,reverse_target_distance; 
+float Radius,X_distance,Y_distance; 
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
@@ -136,11 +136,13 @@ void LINFlex_RX(void)
 		points[1]=data[1]-'0';
 		points[2]=data[2]-'0';
 		points[6]=1;
+//		X_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'Y': 
 		points[3]=data[0]-'0';
 		points[4]=data[1]-'0';
 		points[5]=data[2]-'0';
+//		Y_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'T': //是否执行倒车操作的标志位
 //		points[3]=data[0]-'0';
