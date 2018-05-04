@@ -83,34 +83,32 @@ void rotating_output(motor t[],uint8_t angular_speed)  //顺时针为正，逆时针为负
 	}
 }
 
-void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch)
+void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch,float kp,float ki,float kd,uint32_t period_ms,float perror_max,float ierror_max,float derror_max)
 {
 	t->backward_ch = backward_ch;
 	t->forward_ch = forward_ch;
 	pwm__config(forward_ch);
 	pwm__config(backward_ch);
-	/**EMIOS9用于驱动板的pwm3通道输出持续高电平**/
-	pwm__config(EMIOS_CH9);
-	pwm__duty_update(EMIOS_CH9,1.0f);
+	PID__config(&(t->motor_pid), kp, ki, kd, period_ms, perror_max, ierror_max, derror_max);
 }
 
 void motor_output(motor t , float duty)
 {
-	if(duty > 0.09)
+	if(duty>=0.09f)
 	{
 		pwm__duty_update(t->forward_ch,duty);
 		pwm__duty_update(t->backward_ch,0);
 	}
-	if(duty < -0.09)
-	{
-		pwm__duty_update(t->forward_ch,0);
-		pwm__duty_update(t->backward_ch,duty);
-	}
 	else
 	{
-		pwm__duty_update(t->backward_ch,0);
+		pwm__duty_update(t->backward_ch,-duty);
 		pwm__duty_update(t->forward_ch,0);
 	}
+//	else
+//	{
+//		pwm__duty_update(t->forward_ch,0);
+//		pwm__duty_update(t->backward_ch,0);
+//	}
 }
 
 void x_control_update(motor Motor[])

@@ -12,7 +12,7 @@
 float Radius,X_distance,Y_distance; 
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
-int     points[7];
+float     points[7];
 uint8_t flagR=0,flagr=0,flagRr=0,Reverse_flag=0,Switch_lane_flag = 0,Switch_lane_trigger;
 uint8_t FLAG;
 uint8_t lane_flag,Start_line_flag;//赛道标志,用于设置目标车速
