@@ -124,6 +124,8 @@ void LINFlex_3TX(unsigned char data)
 void LINFlex_RX(void)
 {
 	uint8_t temp;
+	GPIO__output__enable(13);
+	SIU.GPDO[13].B.PDO=0;
 	data[0]=LINFLEX_0.BDRM.B.DATA4;        	// 读取接收到的数据
 	data[1]=LINFLEX_0.BDRM.B.DATA5;			//
 	data[2]=LINFLEX_0.BDRM.B.DATA6;		 //此版本必须每次正好发3Byte字节，否则读取的顺序有误
@@ -136,6 +138,8 @@ void LINFlex_RX(void)
 		points[1]=data[1]-'0';
 		points[2]=data[2]-'0';
 		points[6]=1;
+//		GPIO__output__enable(13);
+//		SIU.GPDO[13].B.PDO=0;
 //		X_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'Y': 

@@ -19,6 +19,7 @@ void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, fl
 }
 void Encoder__init(Encoder__t encoder)
 {		
+	uint8_t temp=encoder->ch;
 	EMIOS_0.CH[encoder->ch].CCR.B.MODE = 0x13;	/* Mode is MCB *///？？？输入pwm
 	EMIOS_0.CH[encoder->ch].CCR.B.BSL = 0x3;	/* Use internal counter 这个是时基*/
 	EMIOS_0.CH[encoder->ch].CCR.B.UCPRE=0;	/* Set channel prescaler to divide by 1 */
@@ -27,14 +28,17 @@ void Encoder__init(Encoder__t encoder)
 	EMIOS_0.CH[encoder->ch].CCR.B.EDPOL=1;	/* Edge Select rising edge */
 	EMIOS_0.CH[encoder->ch].CADR.R=0xffff; 
 				/* (WORD)EMIOS_0.CH[24].CCNTR.R 数据寄存器 读那个方波的周期  他在不停地累加*/
-	SIU.PCR[64].R = 0x0102; //检测脉冲 lsb  下拉电阻，限流吧，io口读一个方波
-	SIU.PCR[65].R = 0x0102;	//检测相位 dir   io口读一个高低电平
+	SIU.PCR[8].R = 0x0102; 
+	SIU.PCR[64].R = 0x0102;
+	SIU.PCR[60].R = 0x0102;
+	SIU.PCR[0].R = 0x0102;//检测脉冲 lsb  下拉电阻，限流吧，io口读一个方波
+//	SIU.PCR[65].R = 0x0102;	//检测相位 dir   io口读一个高低电平
 	GPIO__input__enable(encoder->dir_pad,1,0,0);
 }
 float Speed__bekommen(Encoder__t encoder)
 {
-	uint32_t speed_0;//两次counter的差值
-	if(EMIOS_0.CH[encoder->ch].CCNTR.R<(encoder->_last_counter))		
+	int speed_0;//两次counter的差值
+	if(EMIOS_0.CH[encoder->ch].CCNTR.R < (encoder->_last_counter))		
 		speed_0 =EMIOS_0.CH[encoder->ch].CCNTR.R-(encoder->_last_counter)+65535;
 	else 
 		speed_0 = EMIOS_0.CH[encoder->ch].CCNTR.R-(encoder->_last_counter);
