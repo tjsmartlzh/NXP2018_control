@@ -16,8 +16,9 @@ extern float pram[4];
 static Motor_t Motor[5];
 static motor motor_a[5];
 static ECD_t ecd[4];
-extern float points[7];
-extern float pram[4];
+extern int points[7];
+extern uint8_t pramdata[32];
+extern float X_distance,Y_distance; 
 //extern X_distance;
 //extern Y_distance;
 //extern EMIOSn_CH forward_ch_r[4]={EMIOS_CH2,EMIOS_CH3,EMIOS_CH4,EMIOS_CH5};
@@ -33,7 +34,7 @@ int main(void)
 	motor_a[2]=&(Motor[2]);
 	motor_a[3]=&(Motor[3]);
 	motor_a[4]=&(Motor[4]);
-	motor_config(&(Motor[0]),EMIOS_CH3,EMIOS_CH9,5,0,0,10,10,10,10);
+	motor_config(&(Motor[0]),EMIOS_CH12,EMIOS_CH9,5,0,0,10,10,10,10);
 	motor_config(&(Motor[1]),EMIOS_CH5,EMIOS_CH10,0,0,0,10,10,10,10);
 	motor_config(&(Motor[2]),EMIOS_CH6,EMIOS_CH11,0,0,0,10,10,10,10);
 	motor_config(&(Motor[3]),EMIOS_CH7,EMIOS_CH13,0,0,0,10,10,10,10);
@@ -79,7 +80,8 @@ void test()
 {
 //	char temp;
 	float duty[4];
-	float duty_temp,duty_temp_1;
+	int duty_temp=0;
+	float duty_temp_1;
 	int i=0;
 	char str[3];
 	PIT__clear_flag(PIT_Timer1);
@@ -97,13 +99,15 @@ void test()
 	duty[3]=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, ecd[3]._speed);
 //	if(Dir__bekommen(&ecd[0])) 
 //	ecd[0]._speed = -ecd[0]._speed;
-	duty_temp=(points[0]*100+points[1]*10+points[2]*1)/100.0f;
-	duty_temp_1=pram[0];
+	duty_temp=points[2];//100.0f;
+	duty_temp_1=pram[1];
 	i=data[0]-'0';
-	motor_output(&(Motor[0]),duty[0]);
-	motor_output(&(Motor[1]),0.8);
-	motor_output(&(Motor[2]),-0.8);
-	motor_output(&(Motor[3]),-0.8);
+	
+	motor_output(&(Motor[0]),-duty_temp_1);
+	motor_output(&(Motor[1]),duty_temp_1);
+	motor_output(&(Motor[2]),-duty_temp_1);
+	motor_output(&(Motor[3]),duty_temp_1);
+	
 //	f2s(123,str);
 //	BlueTx(str);
 }

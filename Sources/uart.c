@@ -12,7 +12,7 @@
 float Radius,X_distance,Y_distance; 
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
-float     points[7];
+int     points[7];
 uint8_t flagR=0,flagr=0,flagRr=0,Reverse_flag=0,Switch_lane_flag = 0,Switch_lane_trigger;
 uint8_t FLAG;
 uint8_t lane_flag,Start_line_flag;//赛道标志,用于设置目标车速
@@ -140,13 +140,13 @@ void LINFlex_RX(void)
 		points[6]=1;
 //		GPIO__output__enable(13);
 //		SIU.GPDO[13].B.PDO=0;
-//		X_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
+		X_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'Y': 
 		points[3]=data[0]-'0';
 		points[4]=data[1]-'0';
 		points[5]=data[2]-'0';
-//		Y_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
+		Y_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'T': //是否执行倒车操作的标志位
 //		points[3]=data[0]-'0';
@@ -178,14 +178,14 @@ void LINFlex_RX(void)
 		pramdata[0]=data[0]-'0';
 		pramdata[1]=data[1]-'0';
 		pramdata[2]=data[2]-'0';
-		pram[0]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000);
+		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
 	break;
 	case 'B':
 		//B1
 		pramdata[3]=data[0]-'0';
 		pramdata[4]=data[1]-'0';
 		pramdata[5]=data[2]-'0';
-		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000);
+		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000.0f);
 	break;
 	case 'C': 
 		//K2
