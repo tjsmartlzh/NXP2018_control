@@ -24,8 +24,7 @@ typedef struct{
 /**
  * @ _transmission_ratio 
  */
-void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution,
-		uint32_t time,float radius,uint8_t dir_pad);
+void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution, uint32_t time,float radius);
 void Encoder__init(Encoder__t encoder);
 float Speed__bekommen(Encoder__t encoder);
 unsigned char Dir__bekommen(Encoder__t encoder);
