@@ -32,7 +32,10 @@ void Encoder__init(Encoder__t encoder)
 	SIU.PCR[64].R = 0x0102;
 	SIU.PCR[60].R = 0x0102;
 	SIU.PCR[0].R = 0x0102;//检测脉冲 lsb  下拉电阻，限流吧，io口读一个方波
-//	SIU.PCR[65].R = 0x0102;	//检测相位 dir   io口读一个高低电平
+	SIU.PCR[1].R = 0x0102;	//检测相位 dir   io口读一个高低电平
+	SIU.PCR[2].R = 0x0102;
+	SIU.PCR[41].R = 0x0102;
+	SIU.PCR[47].R = 0x0102;
 	GPIO__input__enable(encoder->dir_pad,1,0,0);
 }
 float Speed__bekommen(Encoder__t encoder)
@@ -49,7 +52,7 @@ float Speed__bekommen(Encoder__t encoder)
 
 unsigned char Dir__bekommen(Encoder__t encoder)
 {   
-	encoder->dir = GPIO__read(65);
+	encoder->dir = GPIO__read(encoder->dir_pad);
 //	encoder->dir = SIU.GPDI[encoder->dir_pad].B.PDI;
 	return(encoder->dir);
 }

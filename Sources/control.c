@@ -99,16 +99,16 @@ void motor_output(motor t , float duty)
 		pwm__duty_update(t->forward_ch,duty);
 		pwm__duty_update(t->backward_ch,0);
 	}
-	else
+	else if(duty<=-0.09f)
 	{
 		pwm__duty_update(t->backward_ch,-duty);
 		pwm__duty_update(t->forward_ch,0);
 	}
-//	else
-//	{
-//		pwm__duty_update(t->forward_ch,0);
-//		pwm__duty_update(t->backward_ch,0);
-//	}
+	else
+	{
+		pwm__duty_update(t->forward_ch,0);
+		pwm__duty_update(t->backward_ch,0);
+	}
 }
 
 void x_control_update(motor Motor[])

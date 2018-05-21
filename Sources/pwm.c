@@ -61,6 +61,10 @@ void pwm__config(EMIOSn_CH ch)
 		SIU.PCR[48+temp].R = 0x0600;//PE[0]--PE[7];
 	else 
 		SIU.PCR[36+temp].R =0x0A00;//PD[12]--PD[15]
+	SIU.PCR[27].R = 0x0600;
+	SIU.PCR[28].R = 0x0600;
+	SIU.PCR[29].R = 0x0600;
+	SIU.PCR[30].R = 0x0600;
 }
 
 void pwm__duty_update(EMIOSn_CH ch,float duty)
@@ -68,7 +72,7 @@ void pwm__duty_update(EMIOSn_CH ch,float duty)
 	if(ch != EMIOS_CH4)
 		EMIOS_0.CH[ch].CBDR.B.CBDR = duty*1000; //*16000
 	else
-		EMIOS_0.CH[ch].CBDR.B.CBDR = duty*16000;
+		EMIOS_0.CH[ch].CBDR.B.CBDR = duty*1000;
 }
 //void pwm__input_measure_config(EMIOSn_CH ch)
 //{

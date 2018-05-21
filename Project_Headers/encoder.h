@@ -14,7 +14,7 @@ typedef struct{
 	EMIOSn_CH ch;   	//电磁组采用的EMIOS通道为具有MCB功能的ch16
 	float _transmission_ratio;// 传动比 0.16515*29/28 = 0.17105// 新车0.15502
 	float _radius;		//车轮半径 32mm？
-	int _speed;		//车轮相对于地面的绝对速度
+	float _speed;		//车轮相对于地面的绝对速度
 	float _resolution; 	//光编线数
 	int _last_counter;
 	float _time;		//采集周期
@@ -24,8 +24,7 @@ typedef struct{
 /**
  * @ _transmission_ratio 
  */
-void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution,
-		uint32_t time,float radius,uint8_t dir_pad);
+void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution, uint32_t time,float radius,uint8_t dir_pad);
 void Encoder__init(Encoder__t encoder);
 float Speed__bekommen(Encoder__t encoder);
 unsigned char Dir__bekommen(Encoder__t encoder);
