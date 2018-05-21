@@ -8,14 +8,13 @@
 #include"MPC5604B.h"
 #include"encoder.h"
 #include"gpio.h"
-void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution, uint32_t time,float radius,uint8_t dir_pad)
+void Encoder__config(Encoder__t encoder,EMIOSn_CH CH,float transmisson_ratio, float resolution, uint32_t time,float radius)
 {
 	encoder->ch = CH;
 	encoder->_resolution = resolution;
 	encoder->_transmission_ratio = transmisson_ratio;
 	encoder->_time = time/1000.0f;
 	encoder->_radius = radius;
-	encoder->dir_pad = dir_pad;
 }
 void Encoder__init(Encoder__t encoder)
 {		
