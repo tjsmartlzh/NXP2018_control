@@ -9,7 +9,7 @@
 #include"stdlib.h"
 #include "IntcInterrupts.h"
 #include "gpio.h"
-float Radius,X_distance,Y_distance; 
+float X_distance_L,X_distance_R,Y_distance_F,Y_distance_B;  
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
@@ -140,13 +140,13 @@ void LINFlex_RX(void)
 		points[6]=1;
 //		GPIO__output__enable(13);
 //		SIU.GPDO[13].B.PDO=0;
-		X_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
+		X_distance_L=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
 	case 'Y': 
 		points[3]=data[0]-'0';
 		points[4]=data[1]-'0';
 		points[5]=data[2]-'0';
-		Y_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
+		Y_distance_F=(points[3]*100+points[4]*10+points[5])/100; //单位待定
 	break;
 	case 'T': //是否执行倒车操作的标志位
 //		points[3]=data[0]-'0';
@@ -163,13 +163,20 @@ void LINFlex_RX(void)
 		points[1]=data[1]-'0';
 		points[2]=data[2]-'0';
 		points[6]=0;
+		X_distance_R=(points[0]*100+points[1]*10+points[2])/100;
+	break;
+	case 'y': 
+		points[3]=data[0]-'0';
+		points[4]=data[1]-'0';
+		points[5]=data[2]-'0';
+		Y_distance_B=(points[3]*100+points[4]*10+points[5])/100; //单位待定
 	break;
 	case 'R':
-		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
 		flagR=1;
 	break;
 	case 'r':
-		Radius=-((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//		Radius=-((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
 		flagr=1;
 	break;
 
