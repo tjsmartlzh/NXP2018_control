@@ -9,12 +9,12 @@
 #include"stdlib.h"
 #include "IntcInterrupts.h"
 #include "gpio.h"
-float Radius,X_distance,Y_distance,x_distance,y_distance; 
+float Radius,X_distance,Y_distance; 
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
 uint8_t flagR=0,flagr=0,flagRr=0,Reverse_flag=0,Switch_lane_flag = 0,Switch_lane_trigger;
-uint8_t FLAG,electromagnet_FLAG;
+uint8_t FLAG;
 uint8_t lane_flag,Start_line_flag;//赛道标志,用于设置目标车速
 float   pram[4];
 uint8_t Lampe_test;
@@ -125,7 +125,7 @@ void LINFlex_RX(void)
 {
 	uint8_t temp;
 	GPIO__output__enable(13);
-	SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
+	SIU.GPDO[13].B.PDO=0;
 	data[0]=LINFLEX_0.BDRM.B.DATA4;        	// 读取接收到的数据
 	data[1]=LINFLEX_0.BDRM.B.DATA5;			//
 	data[2]=LINFLEX_0.BDRM.B.DATA6;		 //此版本必须每次正好发3Byte字节，否则读取的顺序有误
@@ -148,23 +148,22 @@ void LINFlex_RX(void)
 		points[5]=data[2]-'0';
 		Y_distance=(points[0]*100+points[1]*10+points[2])/100; //单位待定
 	break;
-	case 'N': //是否执行倒车操作的标志位
-		electromagnet_FLAG=1;
+	case 'T': //是否执行倒车操作的标志位
+//		points[3]=data[0]-'0';
+//		points[4]=data[1]-'0';
+//		points[5]=data[2]-'0';
+//		reverse_target_distance=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/100.0f;
+//		if (Reverse_finish&&(!RC__flag)) Start_line_flag=1;
+//		GPIO__output__enable(15);
+//        SIU.GPDO[15].B.PDO=0;
+//		Reverse_flag=1;
 	break;
 	case 'x':
 		points[0]=data[0]-'0';
 		points[1]=data[1]-'0';
 		points[2]=data[2]-'0';
 		points[6]=0;
-		x_distance=(points[0]*100+points[1]*10+points[2])/100;
 	break;
-	case 'y':
-		points[0]=data[0]-'0';
-		points[1]=data[1]-'0';
-		points[2]=data[2]-'0';
-		points[6]=0;
-		y_distance=(points[0]*100+points[1]*10+points[2])/100;
-		break;
 	case 'R':
 		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
 		flagR=1;
@@ -181,7 +180,7 @@ void LINFlex_RX(void)
 		pramdata[2]=data[2]-'0';
 		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
 	break;
-	case 'V':
+	case 'B':
 		//B1
 		pramdata[3]=data[0]-'0';
 		pramdata[4]=data[1]-'0';
