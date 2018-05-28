@@ -9,7 +9,8 @@
 #include"stdlib.h"
 #include "IntcInterrupts.h"
 #include "gpio.h"
-float X_distance_L,X_distance_R,Y_distance_F,Y_distance_B;  
+#include "math.h"
+float X_location,Y_location,X_distance_L,X_distance_R,Y_distance_B,Y_distance_F;  
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
@@ -20,6 +21,12 @@ float   pram[4];
 uint8_t Lampe_test;
 extern int ccd_threshold;
 extern uint8_t Reverse_finish;
+uint8_t Elec_flag;
+float destination[2][50];
+uint8_t Start_Flag=0,Send_Flag=0;
+int Step_Count=0,Step_Count_R,step=0;
+float Target_D_X,Target_D_Y;
+int sum_temp=0;
 //extern uint8_t RC__flag;
 void LINFlex_TX(unsigned char data)
 {
@@ -124,8 +131,8 @@ void LINFlex_3TX(unsigned char data)
 void LINFlex_RX(void)
 {
 	uint8_t temp;
-	GPIO__output__enable(13);
-	SIU.GPDO[13].B.PDO=0;
+//	GPIO__output__enable(13);
+//	SIU.GPDO[13].B.PDO=0;
 	data[0]=LINFLEX_0.BDRM.B.DATA4;        	// 读取接收到的数据
 	data[1]=LINFLEX_0.BDRM.B.DATA5;			//
 	data[2]=LINFLEX_0.BDRM.B.DATA6;		 //此版本必须每次正好发3Byte字节，否则读取的顺序有误
@@ -134,131 +141,145 @@ void LINFlex_RX(void)
 	switch (temp)
 	{
 	case 'X':
-		points[0]=data[0]-'0';
-		points[1]=data[1]-'0';
-		points[2]=data[2]-'0';
-		points[6]=1;
-//		GPIO__output__enable(13);
-//		SIU.GPDO[13].B.PDO=0;
-		X_distance_L=(points[0]*100+points[1]*10+points[2])/100; //单位待定
+		points[0]=data[0];
+//		points[1]=data[1]-'0';
+		points[2]=data[1]*256+data[2];
+//		points[6]=1;
+		GPIO__output__enable(13);
+		SIU.GPDO[13].B.PDO=0;
+		destination[0][Step_Count]=(points[2]-1)*50+25; //单位待定
 	break;
 	case 'Y': 
-		points[3]=data[0]-'0';
-		points[4]=data[1]-'0';
-		points[5]=data[2]-'0';
-		Y_distance_F=(points[3]*100+points[4]*10+points[5])/100; //单位待定
+		points[3]=data[0];
+//		points[4]=data[1]-'0';
+		points[5]=data[1]*256+data[2];
+		sum_temp+=points[5];
+		destination[1][Step_Count]=(points[5]-1)*50+25; //单位待定
+		Step_Count++;
+		if(Step_Count==Step_Count_R)
+		{
+			Start_Flag=1;
+			Send_Flag=1;
+		}
 	break;
-	case 'T': //是否执行倒车操作的标志位
+	case 'N': //是否执行起动操作的标志位
+//		pramdata[0]=data[0]-'0';
+//		pramdata[1]=data[1]-'0';
+//		pramdata[2]=data[2]-'0';
+		pram[0]=data[1]*256+data[2];;
+		Step_Count_R=pram[0];
+	break;
+	case 'x':
+//		points[0]=data[0]-'0';
+//		points[1]=data[1]-'0';
+//		points[2]=data[2]-'0';
+//		points[6]=0;
+		X_location=data[1]*256+data[2];
+		if((!((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)))&(step<Step_Count))
+		{
+			Target_D_Y=destination[1][step]-Y_location;
+		}
+	break;
+	case 'y': 
 //		points[3]=data[0]-'0';
 //		points[4]=data[1]-'0';
 //		points[5]=data[2]-'0';
-//		reverse_target_distance=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/100.0f;
-//		if (Reverse_finish&&(!RC__flag)) Start_line_flag=1;
-//		GPIO__output__enable(15);
-//        SIU.GPDO[15].B.PDO=0;
-//		Reverse_flag=1;
+		Y_location=data[1]*256+data[2]; //单位待定
+//		Target_D_Y=destination[1][step]-Y_location;
+		if((!((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)))&(step<Step_Count))
+		{
+			Target_D_Y=destination[1][step]-Y_location;
+		}
+		if((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)&(step<Step_Count))
+		{
+			step++;
+		}
 	break;
-	case 'x':
-		points[0]=data[0]-'0';
-		points[1]=data[1]-'0';
-		points[2]=data[2]-'0';
-		points[6]=0;
-		X_distance_R=(points[0]*100+points[1]*10+points[2])/100;
-	break;
-	case 'y': 
-		points[3]=data[0]-'0';
-		points[4]=data[1]-'0';
-		points[5]=data[2]-'0';
-		Y_distance_B=(points[3]*100+points[4]*10+points[5])/100; //单位待定
-	break;
-	case 'R':
-//		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-		flagR=1;
-	break;
-	case 'r':
-//		Radius=-((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-		flagr=1;
-	break;
-
-	case 'A': 
-		//K1
-		pramdata[0]=data[0]-'0';
-		pramdata[1]=data[1]-'0';
-		pramdata[2]=data[2]-'0';
-		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
-	break;
-	case 'B':
-		//B1
-		pramdata[3]=data[0]-'0';
-		pramdata[4]=data[1]-'0';
-		pramdata[5]=data[2]-'0';
-		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000.0f);
-	break;
-	case 'C': 
-		//K2
-		pramdata[6]=data[0]-'0';
-		pramdata[7]=data[1]-'0';
-		pramdata[8]=data[2]-'0';
-		pram[2]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-	break;
-	case 'D': 
-		//B2
-		pramdata[9]=data[0]-'0';
-		pramdata[10]=data[1]-'0';
-		pramdata[11]=data[2]-'0';
-		pram[3]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-	break;
+//	case 'R':
+////		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//		flagR=1;
+//	break;
+//	case 'r':
+////		Radius=-((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//		flagr=1;
+//	break;
+//
+//	case 'A': 
+//		//K1
+//		pramdata[0]=data[0]-'0';
+//		pramdata[1]=data[1]-'0';
+//		pramdata[2]=data[2]-'0';
+//		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
+//	break;
+//	case 'B':
+//		//B1
+//		pramdata[3]=data[0]-'0';
+//		pramdata[4]=data[1]-'0';
+//		pramdata[5]=data[2]-'0';
+//		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000.0f);
+//	break;
+//	case 'C': 
+//		//K2
+//		pramdata[6]=data[0]-'0';
+//		pramdata[7]=data[1]-'0';
+//		pramdata[8]=data[2]-'0';
+//		pram[2]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//	break;
+//	case 'D': 
+//		//B2
+//		pramdata[9]=data[0]-'0';
+//		pramdata[10]=data[1]-'0';
+//		pramdata[11]=data[2]-'0';
+//		pram[3]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//	break;
 	case 'E':
-		//K2
-		pramdata[12]=data[0]-'0';
-		pramdata[13]=data[1]-'0';
-		pramdata[14]=data[2]-'0';
+		Elec_flag=1;
 	break;
-	case 'F':
-		//B2
-		pramdata[15]=data[0]-'0';
-		pramdata[16]=data[1]-'0';
-		pramdata[17]=data[2]-'0';
-	break;
-	case 'W'://用于修改目标距离
-		pramdata[18] = data[0]-'0';
-		pramdata[19] = data[1]-'0';
-		pramdata[20] = data[2]-'0';
-	break;
-	case 'S'://用于修改目标速度
-		pramdata[21] = data[0]-'0';
-		pramdata[22] = data[1]-'0';
-		pramdata[23] = data[2]-'0';
-	break;
-	case 'f'://用于判断赛道标志
-		lane_flag = data[2];
-	break;
-	case 'G':
-		//用于切换赛道的标志位      Switch_lane_trigger = G 向左切换赛道
-		// 					   Switch_lane_trigger = g 向右切换赛道
-		Switch_lane_trigger = data[3];
-		Switch_lane_flag = data[2];
-	break;
-	case 'g':
-		Switch_lane_trigger = data[3];
-		Switch_lane_flag = data[2];
-	break;
-	case 'L':
-		//用于测试Infomation_lampe
-//		Lampe_test = data[2];
+//	case 'F':
+//		//B2
+//		pramdata[15]=data[0]-'0';
+//		pramdata[16]=data[1]-'0';
+//		pramdata[17]=data[2]-'0';
+//	break;
+//	case 'W'://用于修改目标距离
+//		pramdata[18] = data[0]-'0';
+//		pramdata[19] = data[1]-'0';
+//		pramdata[20] = data[2]-'0';
+//	break;
+//	case 'S'://用于修改目标速度
+//		pramdata[21] = data[0]-'0';
+//		pramdata[22] = data[1]-'0';
+//		pramdata[23] = data[2]-'0';
+//	break;
+//	case 'f'://用于判断赛道标志
+//		lane_flag = data[2];
+//	break;
+//	case 'G':
+//		//用于切换赛道的标志位      Switch_lane_trigger = G 向左切换赛道
+//		// 					   Switch_lane_trigger = g 向右切换赛道
+//		Switch_lane_trigger = data[3];
+//		Switch_lane_flag = data[2];
+//	break;
+//	case 'g':
+//		Switch_lane_trigger = data[3];
+//		Switch_lane_flag = data[2];
+//	break;
+//	case 'L':
+//		//用于测试Infomation_lampe
+////		Lampe_test = data[2];
+////		GPIO__output__enable(15);
+////		if (Lampe_test=='1') 	   SIU.GPDO[15].B.PDO=0;//右赛道
+////		else if (Lampe_test=='2')  SIU.GPDO[15].B.PDO=1;//左赛道
+//	break;
+//	case'c':
+//		//用于确定CCD的阈值
+////        ccd_threshold = ((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
+//    break;
+//	default:
+//		initLINFlex_0_UART(12);
 //		GPIO__output__enable(15);
-//		if (Lampe_test=='1') 	   SIU.GPDO[15].B.PDO=0;//右赛道
-//		else if (Lampe_test=='2')  SIU.GPDO[15].B.PDO=1;//左赛道
-	break;
-	case'c':
-		//用于确定CCD的阈值
-//        ccd_threshold = ((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-    break;
-	default:
-		initLINFlex_0_UART(12);
-		GPIO__output__enable(15);
-		SIU.GPDO[15].B.PDO=0;
-	break;
+//		SIU.GPDO[15].B.PDO=0;
+//	break;
 	}
 	if (flagR||flagr) flagRr=1;
 	LINFLEX_0.UARTSR.B.DRF = 1;  
@@ -295,34 +316,34 @@ void initLINFlex_0_UART(uint8_t pri)
   SIU.PCR[19].R = 0x0103;    /* MPC56xxB: Configure port B3 as LIN0RX */
   INTC_InstallINTCInterruptHandler(LINFlex_RX,79,pri); 
 }
-void initLINFlex_3_UART(uint8_t pri)
-{
-	//配置LINFlex
-	LINFLEX_3.LINCR1.B.INIT   = 1;   // 请求初始化
-	LINFLEX_3.LINCR1.B.SLEEP  = 0;  // 禁止睡眠模式
-	LINFLEX_3.LINCR1.B.BF     = 0;  // 如果ID不匹配不产生中断
-	
-	LINFLEX_3.UARTCR.B.UART   = 1;        // 进入UART模式
-	LINFLEX_3.UARTCR.B.RXEN   = 1;   // 允许接收
-	LINFLEX_3.UARTCR.B.TXEN   = 1;   // 允许发送
-	LINFLEX_3.UARTCR.B.WL     = 1;        // 8位数据位
-	//  LINFLEX_3.UARTCR.B.OP     = 1;      // 偶校验
-	LINFLEX_3.UARTCR.B.PCE    = 0;  // 禁止奇偶校验
-	LINFLEX_3.UARTCR.B.TDFL   = 0;        // 发送缓冲区为1个字节
-	LINFLEX_3.UARTCR.B.RDFL   = 3;        // 接收缓冲区为4个字节
-
-	LINFLEX_3.LINIBRR.B.DIV_M = 416;      // Baud Rate = 9600, In Case fipg_clock_lin = 64 MHz
-	LINFLEX_3.LINFBRR.B.DIV_F = 11;       // Baud Rate = 9600, In Case fipg_clock_lin = 64 MHz
-
-	//配置中断，使能中断功能
-	LINFLEX_3.LINIER.B.DRIE   = 1;   // 数据接收完成中断
-	LINFLEX_3.UARTSR.B.DRF    = 1;   // 清除接收完成标志
-	LINFLEX_3.UARTSR.B.DTF    = 1;   // 清除发送完成标志
-
-	LINFLEX_3.LINCR1.B.INIT   = 0;  // 变为正常模式
-
-	SIU.PCR[74].R = 0x0400;    /* MPC56xxB: Configure port E10 as LIN3TX */
-	SIU.PCR[75].R = 0x0103;    /* MPC56xxB: Configure port E11 as LIN3RX */
-	INTC_InstallINTCInterruptHandler(LINFlex_3RX,122,pri); 
-}
+//void initLINFlex_3_UART(uint8_t pri)
+//{
+//	//配置LINFlex
+//	LINFLEX_3.LINCR1.B.INIT   = 1;   // 请求初始化
+//	LINFLEX_3.LINCR1.B.SLEEP  = 0;  // 禁止睡眠模式
+//	LINFLEX_3.LINCR1.B.BF     = 0;  // 如果ID不匹配不产生中断
+//	
+//	LINFLEX_3.UARTCR.B.UART   = 1;        // 进入UART模式
+//	LINFLEX_3.UARTCR.B.RXEN   = 1;   // 允许接收
+//	LINFLEX_3.UARTCR.B.TXEN   = 1;   // 允许发送
+//	LINFLEX_3.UARTCR.B.WL     = 1;        // 8位数据位
+//	//  LINFLEX_3.UARTCR.B.OP     = 1;      // 偶校验
+//	LINFLEX_3.UARTCR.B.PCE    = 0;  // 禁止奇偶校验
+//	LINFLEX_3.UARTCR.B.TDFL   = 0;        // 发送缓冲区为1个字节
+//	LINFLEX_3.UARTCR.B.RDFL   = 3;        // 接收缓冲区为4个字节
+//
+//	LINFLEX_3.LINIBRR.B.DIV_M = 416;      // Baud Rate = 9600, In Case fipg_clock_lin = 64 MHz
+//	LINFLEX_3.LINFBRR.B.DIV_F = 11;       // Baud Rate = 9600, In Case fipg_clock_lin = 64 MHz
+//
+//	//配置中断，使能中断功能
+//	LINFLEX_3.LINIER.B.DRIE   = 1;   // 数据接收完成中断
+//	LINFLEX_3.UARTSR.B.DRF    = 1;   // 清除接收完成标志
+//	LINFLEX_3.UARTSR.B.DTF    = 1;   // 清除发送完成标志
+//
+//	LINFLEX_3.LINCR1.B.INIT   = 0;  // 变为正常模式
+//
+//	SIU.PCR[74].R = 0x0400;    /* MPC56xxB: Configure port E10 as LIN3TX */
+//	SIU.PCR[75].R = 0x0103;    /* MPC56xxB: Configure port E11 as LIN3RX */
+//	INTC_InstallINTCInterruptHandler(LINFlex_3RX,122,pri); 
+//}
 

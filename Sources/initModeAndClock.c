@@ -26,15 +26,18 @@ void initModesAndClock(void)
 	  ME.RUNPC[0].R = 0x000000FE;           
 	 
 	  // SIUL: 选择 ME.RUNPC[0] 的配置  
-	  ME.PCTL[68].R = 0x00;                 
+	  ME.PCTL[68].R = 0x00; 
+	  ME.PCTL[72].R = 0x00;           /* MPC56xxB/S EMIOS 0:  select ME.RUNPC[0] */  //add by LZH 
 
 	// 设置进入RUN0模式
 	  ME.MCTL.R = 0x40005AF0;               //写入模式和密钥
 	  ME.MCTL.R = 0x4000A50F;               //写入模式和反密钥
 
+	  
 	//等待模式转换完成
 	  while(ME.GS.B.S_MTRANS) {};           
 	//验证进入了RUN0模式
 	  while(ME.GS.B.S_CURRENTMODE != 4) {}  
 	
+	  CGM.SC_DC[1].R = 0x80;//FLEXCAN,DSPI  add by LZH
 }
