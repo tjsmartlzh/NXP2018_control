@@ -141,12 +141,13 @@ void LINFlex_RX(void)
 	switch (temp)
 	{
 	case 'X':
-		points[0]=data[0];
-//		points[1]=data[1]-'0';
+		points[0]=data[0]-'0';
+		// /points[1]=data[1]-'0';
 		points[2]=data[1]*256+data[2];
+//		points[2]=data[1]*256+data[2];
 //		points[6]=1;
 		GPIO__output__enable(13);
-		SIU.GPDO[13].B.PDO=0;
+		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		destination[0][Step_Count]=(points[2]-1)*50+25; //单位待定
 	break;
 	case 'Y': 
@@ -165,32 +166,30 @@ void LINFlex_RX(void)
 	case 'N': //是否执行起动操作的标志位
 //		pramdata[0]=data[0]-'0';
 //		pramdata[1]=data[1]-'0';
-//		pramdata[2]=data[2]-'0';
 		pram[0]=data[1]*256+data[2];;
 		Step_Count_R=pram[0];
 	break;
 	case 'x':
-//		points[0]=data[0]-'0';
-//		points[1]=data[1]-'0';
-//		points[2]=data[2]-'0';
+		// points[0]=data[0]-'0';
+		// points[1]=data[1]-'0';
+		// points[2]=data[2]-'0';
 //		points[6]=0;
 		X_location=data[1]*256+data[2];
-		if((!((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)))&(step<Step_Count))
-		{
-			Target_D_Y=destination[1][step]-Y_location;
-		}
+		// X_location=points[0]*100+points[1]*10+points[2];
+
+		Target_D_X=destination[0][step]-X_location;
+
 	break;
 	case 'y': 
-//		points[3]=data[0]-'0';
-//		points[4]=data[1]-'0';
-//		points[5]=data[2]-'0';
+		// points[3]=data[0]-'0';
+		// points[4]=data[1]-'0';
+		// points[5]=data[2]-'0';
 		Y_location=data[1]*256+data[2]; //单位待定
 //		Target_D_Y=destination[1][step]-Y_location;
-		if((!((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)))&(step<Step_Count))
-		{
-			Target_D_Y=destination[1][step]-Y_location;
-		}
-		if((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)&(step<Step_Count))
+
+		Target_D_Y=destination[1][step]-Y_location;
+
+		if((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)&&(step<Step_Count))
 		{
 			step++;
 		}

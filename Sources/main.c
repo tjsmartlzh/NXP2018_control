@@ -70,7 +70,7 @@ int main(void)
 	str[0]=0x66;
 	str[1]=0x00;
 	str[2]=0x00;
-//	str[3]=0xff;
+	str[3]=0xff;
 	while(1)
 	{
 //		BlueTx("000S");
@@ -102,29 +102,37 @@ void Mode0_Quick(void)
 {
 	OLED_Fill(0x00);
 	
+//	OLED_SetPointer(0,0);
+//	OLED_Str("step ");
+//	OLED_Num(Step_Count_R);
+	
 	OLED_SetPointer(1,0);
-	OLED_Str("step");
-	OLED_Char(data[0]);
+	OLED_Str("step ");
+	OLED_Num(step);
 	
 	OLED_SetPointer(2,0);
-	OLED_Str("TargetX");
-	OLED_Char(data[1]);
+	OLED_Str("dst_X ");
+	OLED_Float(sum_temp);
 //	
 	OLED_SetPointer(3,0);
-	OLED_Str("TargetX");
-	OLED_Char(data[2]);
+	OLED_Str("dst_Y ");
+	OLED_Float(destination[1][step]);
 //	
 	OLED_SetPointer(4,0);
-	OLED_Str("v1");
-	OLED_Char(data[3]);
+	OLED_Str("v1 ");
+	OLED_Float(Target_D_X);
 //	
 	OLED_SetPointer(5,0);
-	OLED_Str("v2");
-	OLED_Num(sum_temp);
+	OLED_Str("v2 ");
+	OLED_Float(motor_a[0]->target_speed);
 //	
 	OLED_SetPointer(6,0);
-	OLED_Str("v3");
-	OLED_Float(destination[1][Step_Count]);
+	OLED_Str("v3 ");
+	OLED_Float(motor_a[0]->actual_speed);
+	
+	OLED_SetPointer(7,0);
+	OLED_Str("v4 ");
+	OLED_Float(motor_a[0]->duty);
 	
 //	OLED_SetPointer(7,0);
 //	OLED_Str("");
@@ -144,24 +152,21 @@ void test1()
 	float duty_temp_1;
 	int i=0;
 	float Target_Speed;
-//	delay_ms(200);
-//	f2s(123,str);
-//	BlueTx(str);
 	Mode0_Quick();
-	if(Start_Flag==0) 
+	if((Start_Flag==0)||(step>=Step_Count)) 
 	{
+		motor_output(motor_a[0],0);
+		motor_output(motor_a[1],0);
+		motor_output(motor_a[2],0);
+		motor_output(motor_a[3],0);
 		return;
 	}
 	SIU.GPDO[12].B.PDO=!SIU.GPDO[12].B.PDO;
 	if(Send_Flag==1)
 	{
-		str[3]=0xff;
-		for(i=0;i<5;i++)
-		{
-			BlueTx(str);
-			delay_ms(200);
-		}
-		 Send_Flag=0;
+		delay_ms(500);
+		BlueTx(str);
+		Send_Flag=0;
 	}
 	PID__config(&motor_a[0]->motor_pid,0.64f,1.25f,0,10,10,70,10); //1.44p 50i
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
@@ -223,7 +228,7 @@ void test1()
 	}
 	
 	
-	if((fabs(Target_D_X)<5)&(fabs(Target_D_Y)<5)&(step<=Step_Count))
+	if((fabs(Target_D_X)<5)&(fabs(Target_D_Y)<5)&(step<Step_Count))
 	{
 		motor_a[0]->target_speed=0;
 		motor_a[1]->target_speed=0;
@@ -233,8 +238,9 @@ void test1()
 		delay_ms(200);
 //		step++;
 	}
+	
 //	Actual_D += ecd[0]._speed*0.01;
-	if(motor_a[0]->target_speed!=motor_a[1]->target_speed)
+	if(motor_a[0]->target_speed==-(motor_a[1]->target_speed))
 	{
 		motor_a[0]->duty=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[1]->actual_speed), motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[3]->actual_speed), motor_a[0]->actual_speed);
 		motor_a[1]->duty=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[0]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[2]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
@@ -257,7 +263,7 @@ void test1()
 	if(motor_a[2]->duty<-1.0f) motor_a[2]->duty=-1.0f;
 	if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
 	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
-	duty_temp_1=0.4;
+//	duty_temp_1=0.4;
 	motor_output(motor_a[0],motor_a[0]->duty);
 	motor_output(motor_a[1],motor_a[1]->duty);
 	motor_output(motor_a[2],motor_a[2]->duty);
