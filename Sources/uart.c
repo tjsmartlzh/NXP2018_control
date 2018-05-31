@@ -10,7 +10,7 @@
 #include "IntcInterrupts.h"
 #include "gpio.h"
 #include "math.h"
-float X_location,Y_location,X_distance_L,X_distance_R,Y_distance_B,Y_distance_F;  
+float X_location,Y_location,X_distance_L,X_distance_R,Y_distance_B,Y_distance_F,theta;  
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
@@ -131,8 +131,6 @@ void LINFlex_3TX(unsigned char data)
 void LINFlex_RX(void)
 {
 	uint8_t temp;
-//	GPIO__output__enable(13);
-//	SIU.GPDO[13].B.PDO=0;
 	data[0]=LINFLEX_0.BDRM.B.DATA4;        	// 读取接收到的数据
 	data[1]=LINFLEX_0.BDRM.B.DATA5;			//
 	data[2]=LINFLEX_0.BDRM.B.DATA6;		 //此版本必须每次正好发3Byte字节，否则读取的顺序有误
@@ -141,19 +139,15 @@ void LINFlex_RX(void)
 	switch (temp)
 	{
 	case 'X':
-		points[0]=data[0]-'0';
-		// /points[1]=data[1]-'0';
 		points[2]=data[1]*256+data[2];
-//		points[2]=data[1]*256+data[2];
-//		points[6]=1;
+//		points[2]=data[2]-'0';
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		destination[0][Step_Count]=(points[2]-1)*50+25; //单位待定
 	break;
 	case 'Y': 
-		points[3]=data[0];
-//		points[4]=data[1]-'0';
 		points[5]=data[1]*256+data[2];
+//		points[5]=data[2]-'0';
 		sum_temp+=points[5];
 		destination[1][Step_Count]=(points[5]-1)*50+25; //单位待定
 		Step_Count++;
@@ -164,50 +158,39 @@ void LINFlex_RX(void)
 		}
 	break;
 	case 'N': //是否执行起动操作的标志位
-//		pramdata[0]=data[0]-'0';
-//		pramdata[1]=data[1]-'0';
-		pram[0]=data[1]*256+data[2];;
+//		pramdata[2]=data[2]-'0';
+		pram[0]=data[1]*256+data[2];
+//		pram[0]=pramdata[2];
 		Step_Count_R=pram[0];
 	break;
 	case 'x':
-		// points[0]=data[0]-'0';
-		// points[1]=data[1]-'0';
-		// points[2]=data[2]-'0';
-//		points[6]=0;
+//		 points[0]=data[0]-'0';
+//		 points[1]=data[1]-'0';
+//		 points[2]=data[2]-'0';
 		X_location=data[1]*256+data[2];
-		// X_location=points[0]*100+points[1]*10+points[2];
+//		 X_location=points[0]*100+points[1]*10+points[2];
 
 		Target_D_X=destination[0][step]-X_location;
 
 	break;
 	case 'y': 
-		// points[3]=data[0]-'0';
-		// points[4]=data[1]-'0';
-		// points[5]=data[2]-'0';
+//		 points[3]=data[0]-'0';
+//		 points[4]=data[1]-'0';
+//		 points[5]=data[2]-'0';
 		Y_location=data[1]*256+data[2]; //单位待定
-//		Target_D_Y=destination[1][step]-Y_location;
-
 		Target_D_Y=destination[1][step]-Y_location;
+//		 Y_location=points[3]*100+points[4]*10+points[5];
+//		Target_D_Y=destination[1][step]-Y_location;
 
 		if((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)&&(step<Step_Count))
 		{
 			step++;
 		}
 	break;
-//	case 'R':
-////		Radius=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-//		flagR=1;
-//	break;
-//	case 'r':
-////		Radius=-((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-//		flagr=1;
-//	break;
-//
-//	case 'A': 
-//		//K1
-//		pramdata[0]=data[0]-'0';
-//		pramdata[1]=data[1]-'0';
-//		pramdata[2]=data[2]-'0';
+
+	case 'a': 
+		//K1
+		theta=data[1]*256+data[2];
 //		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
 //	break;
 //	case 'B':

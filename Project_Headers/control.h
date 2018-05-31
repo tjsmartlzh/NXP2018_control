@@ -36,4 +36,5 @@ void motor_output(motor t , float duty);
 void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch,float kp,float ki,float kd,uint32_t period_ms,float perror_max,float ierror_max,float derror_max);
 void x_control_update(motor Motor[]);
 void y_control_update(motor Motor[]);
+void Motor_Control_Eight_Queens(void);
 #endif /* ACTION_H_ */
