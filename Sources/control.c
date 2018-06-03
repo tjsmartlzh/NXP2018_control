@@ -68,20 +68,20 @@ void horizontal_output(motor t[],uint8_t speed_x)  //向右为正，向左为负
 	}
 }
 
-void rotating_output(motor t[],uint8_t angular_speed)  //顺时针为正，逆时针为负
-{
-	int i=0;
-	t[0]->duty = -angular_speed * (half_track_distance + half_wheelbase);
-	t[1]->duty = angular_speed * (half_track_distance + half_wheelbase);
-	t[2]->duty = -angular_speed * (half_track_distance + half_wheelbase);
-	t[3]->duty = angular_speed * (half_track_distance + half_wheelbase);
-	for(i=0;i<4;i++)
-	{
-		if(t[i]->duty>=1) t[i]->duty = 1.0f;
-		if(t[i]->duty<=-1) t[i]->duty = -1.0f;
-		motor_output(t[i],t[i]->duty);
-	}
-}
+//void rotating_output(motor t[],uint8_t angular_speed)  //顺时针为正，逆时针为负
+//{
+//	int i=0;
+//	t[0]->duty = -angular_speed * (half_track_distance + half_wheelbase);
+//	t[1]->duty = angular_speed * (half_track_distance + half_wheelbase);
+//	t[2]->duty = -angular_speed * (half_track_distance + half_wheelbase);
+//	t[3]->duty = angular_speed * (half_track_distance + half_wheelbase);
+//	for(i=0;i<4;i++)
+//	{
+//		if(t[i]->duty>=1) t[i]->duty = 1.0f;
+//		if(t[i]->duty<=-1) t[i]->duty = -1.0f;
+//		motor_output(t[i],t[i]->duty);
+//	}
+//}
 
 void motor_config(motor t,EMIOSn_CH forward_ch,EMIOSn_CH backward_ch,float kp,float ki,float kd,uint32_t period_ms,float perror_max,float ierror_max,float derror_max)
 {

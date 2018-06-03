@@ -10,7 +10,7 @@
 #include "IntcInterrupts.h"
 #include "gpio.h"
 #include "math.h"
-float X_location,Y_location,X_distance_L,X_distance_R,Y_distance_B,Y_distance_F,theta;  
+float X_location,Y_location,X_last_location,X_last_last_location,X_error,X_last_error,theta;  
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
 int     points[7];
@@ -28,6 +28,7 @@ int Step_Count=0,Step_Count_R,step=0;
 float Target_D_X,Target_D_Y;
 int sum_temp=0;
 //extern uint8_t RC__flag;
+int C_flag;
 void LINFlex_TX(unsigned char data)
 {
 	LINFLEX_0.BDRL.B.DATA0 = data;       //发送语句
@@ -139,15 +140,15 @@ void LINFlex_RX(void)
 	switch (temp)
 	{
 	case 'X':
-		points[2]=data[1]*256+data[2];
-//		points[2]=data[2]-'0';
+//		points[2]=data[2]-'0';    //调试换算
+		points[2]=data[1]*256+data[2];    //实际换算
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		destination[0][Step_Count]=(points[2]-1)*50+25; //单位待定
 	break;
 	case 'Y': 
-		points[5]=data[1]*256+data[2];
-//		points[5]=data[2]-'0';
+//		points[5]=data[2]-'0';    //调试换算
+		points[5]=data[1]*256+data[2];    //实际换算
 		sum_temp+=points[5];
 		destination[1][Step_Count]=(points[5]-1)*50+25; //单位待定
 		Step_Count++;
@@ -157,111 +158,49 @@ void LINFlex_RX(void)
 			Send_Flag=1;
 		}
 	break;
-	case 'N': //是否执行起动操作的标志位
-//		pramdata[2]=data[2]-'0';
-		pram[0]=data[1]*256+data[2];
-//		pram[0]=pramdata[2];
+	case 'N': //是否执行吸棋子操作的标志位
+//		pramdata[2]=data[2]-'0';    //调试换算
+//		pram[0]=pramdata[2];    //调试换算
+		pram[0]=data[1]*256+data[2];    //实际换算
 		Step_Count_R=pram[0];
 	break;
 	case 'x':
-//		 points[0]=data[0]-'0';
-//		 points[1]=data[1]-'0';
-//		 points[2]=data[2]-'0';
-		X_location=data[1]*256+data[2];
-//		 X_location=points[0]*100+points[1]*10+points[2];
-
+//		points[0]=data[0]-'0';    //调试换算
+//		points[1]=data[1]-'0';    //调试换算
+//		points[2]=data[2]-'0';    //调试换算
+//		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
+		X_location=data[1]*256+data[2];    //实际换算
+		X_error=X_last_location-X_location;
+		X_last_location=X_location;
+		X_last_error=X_last_last_location-X_last_location;
+		X_last_last_location=X_last_location;
 		Target_D_X=destination[0][step]-X_location;
-
+		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
+		
 	break;
 	case 'y': 
-//		 points[3]=data[0]-'0';
-//		 points[4]=data[1]-'0';
-//		 points[5]=data[2]-'0';
-		Y_location=data[1]*256+data[2]; //单位待定
+//		points[3]=data[0]-'0';    //调试换算
+//		points[4]=data[1]-'0';	  //调试换算
+//		points[5]=data[2]-'0';    //调试换算
+//		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
+		Y_location=data[1]*256+data[2];    //实际换算
 		Target_D_Y=destination[1][step]-Y_location;
-//		 Y_location=points[3]*100+points[4]*10+points[5];
-//		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<5)&&(fabs(Target_D_Y)<5)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(step<Step_Count))
 		{
 			step++;
 		}
 	break;
 
 	case 'a': 
-		//K1
-		theta=data[1]*256+data[2];
-//		pram[0]=((pramdata[0]*100+pramdata[1]*10+pramdata[2]));
-//	break;
-//	case 'B':
-//		//B1
-//		pramdata[3]=data[0]-'0';
-//		pramdata[4]=data[1]-'0';
-//		pramdata[5]=data[2]-'0';
-//		pram[1]=(((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'))/1000.0f);
-//	break;
-//	case 'C': 
-//		//K2
-//		pramdata[6]=data[0]-'0';
-//		pramdata[7]=data[1]-'0';
-//		pramdata[8]=data[2]-'0';
-//		pram[2]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-//	break;
-//	case 'D': 
-//		//B2
-//		pramdata[9]=data[0]-'0';
-//		pramdata[10]=data[1]-'0';
-//		pramdata[11]=data[2]-'0';
-//		pram[3]=((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-//	break;
+		theta=data[1]*256+data[2];    //实际换算
+	break;
 	case 'E':
 		Elec_flag=1;
 	break;
-//	case 'F':
-//		//B2
-//		pramdata[15]=data[0]-'0';
-//		pramdata[16]=data[1]-'0';
-//		pramdata[17]=data[2]-'0';
-//	break;
-//	case 'W'://用于修改目标距离
-//		pramdata[18] = data[0]-'0';
-//		pramdata[19] = data[1]-'0';
-//		pramdata[20] = data[2]-'0';
-//	break;
-//	case 'S'://用于修改目标速度
-//		pramdata[21] = data[0]-'0';
-//		pramdata[22] = data[1]-'0';
-//		pramdata[23] = data[2]-'0';
-//	break;
-//	case 'f'://用于判断赛道标志
-//		lane_flag = data[2];
-//	break;
-//	case 'G':
-//		//用于切换赛道的标志位      Switch_lane_trigger = G 向左切换赛道
-//		// 					   Switch_lane_trigger = g 向右切换赛道
-//		Switch_lane_trigger = data[3];
-//		Switch_lane_flag = data[2];
-//	break;
-//	case 'g':
-//		Switch_lane_trigger = data[3];
-//		Switch_lane_flag = data[2];
-//	break;
-//	case 'L':
-//		//用于测试Infomation_lampe
-////		Lampe_test = data[2];
-////		GPIO__output__enable(15);
-////		if (Lampe_test=='1') 	   SIU.GPDO[15].B.PDO=0;//右赛道
-////		else if (Lampe_test=='2')  SIU.GPDO[15].B.PDO=1;//左赛道
-//	break;
-//	case'c':
-//		//用于确定CCD的阈值
-////        ccd_threshold = ((data[0]-'0')*100+(data[1]-'0')*10+(data[2]-'0'));
-//    break;
-//	default:
-//		initLINFlex_0_UART(12);
-//		GPIO__output__enable(15);
-//		SIU.GPDO[15].B.PDO=0;
-//	break;
+	default:
+		initLINFlex_0_UART(12);
+	break;
 	}
 	if (flagR||flagr) flagRr=1;
 	LINFLEX_0.UARTSR.B.DRF = 1;  

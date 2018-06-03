@@ -11,8 +11,8 @@
 #include "MPC5604B.h"
 #include "pid.h"
 #include "pwm.h"
-#define half_track_distance 10 //°ëÂÖ¾à
-#define half_wheelbase 10  //°ëÖá¾à
+//#define half_track_distance 10 //°ëÂÖ¾à
+//#define half_wheelbase 10  //°ëÖá¾à
 typedef struct
 {
 	EMIOSn_CH forward_ch;
@@ -22,7 +22,7 @@ typedef struct
 	float actual_speed;
 	float duty;
 	float x_distance;
-	float angel;
+	float angel_speed;
 	float y_distance;
 	float target_angel;
 }Motor_t,*motor;

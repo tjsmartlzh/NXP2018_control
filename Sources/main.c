@@ -21,7 +21,7 @@ static motor motor_a[5];
 static ECD_t ecd[4];
 extern int points[7];
 extern uint8_t pramdata[32];
-extern float X_location,Y_location; 
+extern float X_location,Y_location,X_error,Y_error,theta; 
 extern float Target_D_X,Target_D_Y;
 static float D=0;
 static float Actual_D;
@@ -31,13 +31,14 @@ extern uint8_t Start_Flag,Send_Flag;
 extern float destination[2][50];
 float Target_D;
 extern int step;
-extern X_distance_L,X_distance_R,Y_distance_B,Y_distance_F; 
 char str[4];
 extern int sum_temp;
 float omiga;
+int straight_flag=0;
+extern C_flag;
 
-#define half_track_dis 0.25 //待测
-#define half_wheel_dis 0.25 //待测
+#define half_track_dis 0.21 //待测
+#define half_wheel_dis 0.16 //待测
 //extern X_distance;
 //extern Y_distance;
 //extern EMIOSn_CH forward_ch_r[4]={EMIOS_CH2,EMIOS_CH3,EMIOS_CH4,EMIOS_CH5};
@@ -68,8 +69,8 @@ int main(void)
 	Encoder__init(&ecd[3]);
 	GPIO__output__enable(14);
 	GPIO__output__enable(12);
-	GPIO__output__enable(20);  //B4  推拉机构
-	GPIO__output__enable(21);  //B5 电磁铁
+	GPIO__output__enable(71);  //E7  推拉机构
+	GPIO__output__enable(45);  //C13 电磁铁
 	PIT__config(PIT_Timer1,10,64,test1,10);
 	str[0]=0x66;
 	str[1]=0x55;
@@ -81,18 +82,18 @@ int main(void)
 //		f2s(123,str);
 //		BlueTx(str);
 //		Mode0_Quick();
-		if((Elec_flag==1)&(step%2==0))
+		if((Elec_flag==1)&&(step%2==0))
 		{
-			SIU.GPDO[21].B.PDO=1;
-			delay_ms(200);
-			SIU.GPDO[20].B.PDO=1;
+			SIU.GPDO[45].B.PDO=1;
+			delay_ms(500);
+			SIU.GPDO[71].B.PDO=1;
 			Elec_flag=0;
 		}
-		else if((Elec_flag==1)&(step%2==1))
+		else if((Elec_flag==1)&&(step%2==1))
 		{
-			SIU.GPDO[20].B.PDO=0;
-			delay_ms(200);
-			SIU.GPDO[21].B.PDO=0;
+			SIU.GPDO[71].B.PDO=0;
+			delay_ms(500);
+			SIU.GPDO[45].B.PDO=0;
 			Elec_flag=0;
 		}
 		else
@@ -108,35 +109,35 @@ void Mode0_Quick(void)
 	
 //	OLED_SetPointer(0,0);
 //	OLED_Str("step ");
-//	OLED_Num(Step_Count_R);
+//	OLED_Num(straight_flag);
 	
 	OLED_SetPointer(1,0);
-	OLED_Str("step ");
-	OLED_Num(step);
+	OLED_Str("v1 ");
+	OLED_Num(motor_a[0]->actual_speed);
 	
-	OLED_SetPointer(2,0);
-	OLED_Str("dst_X ");
-	OLED_Float(destination[0][step]);
+//	OLED_SetPointer(2,0);
+//	OLED_Str("dst_X ");
+//	OLED_Float(destination[0][step]);
 //	
 	OLED_SetPointer(3,0);
-	OLED_Str("dst_Y ");
-	OLED_Float(destination[1][step]);
-//	
-	OLED_SetPointer(4,0);
-	OLED_Str("v1 ");
-	OLED_Float(Target_D_X);
+	OLED_Str("v2 ");
+	OLED_Float(motor_a[1]->actual_speed);
+	
+//	OLED_SetPointer(4,0);
+//	OLED_Str("v1 ");
+//	OLED_Float(Target_D_X);
 //	
 	OLED_SetPointer(5,0);
-	OLED_Str("v2 ");
-	OLED_Float(Target_D_Y);
-//	
-	OLED_SetPointer(6,0);
 	OLED_Str("v3 ");
-	OLED_Float(motor_a[0]->target_speed);
+	OLED_Float(motor_a[2]->actual_speed);
+	
+//	OLED_SetPointer(6,0);
+//	OLED_Str("v3 ");
+//	OLED_Float(motor_a[2]->actual_speed);
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(motor_a[0]->actual_speed);
+	OLED_Float(motor_a[3]->actual_speed);
 	
 //	OLED_SetPointer(7,0);
 //	OLED_Str("");
@@ -153,9 +154,9 @@ void Mode0_Quick(void)
 void test1()
 {
 	int duty_temp=0;
-	float duty_temp_1;
+//	float duty_temp_1;
 	int i=0;
-	float Target_Speed;
+//	float Target_Speed;
 	Mode0_Quick();
 	if((Start_Flag==0)||(step>=Step_Count)) 
 	{
@@ -172,21 +173,19 @@ void test1()
 		BlueTx(str);
 		Send_Flag=0;
 	}
-//	if(fabs(theta - 90)>10) omiga=5;
-//	if((fabs(theta - 90)<10)&&(fabs(theta - 90)>8)) omiga=4;
-//	if((fabs(theta - 90)<8)&&(fabs(theta - 90)>6)) omiga=3;
-//	if((fabs(theta - 90)<6)&&(fabs(theta - 90)>4)) omiga=2;
-//	if((fabs(theta - 90)<4)&&(fabs(theta - 90)>2)) omiga=1;
-//	if(fabs(theta - 90)<2) omiga=0;
-//	if((fabs(theta - 90)<-2)&&(fabs(theta - 90)>-4)) omiga=-1;
-//	if((fabs(theta - 90)<-4)&&(fabs(theta - 90)>-6)) omiga=-2;
-//	if((fabs(theta - 90)<-6)&&(fabs(theta - 90)>-8)) omiga=-3;
-//	if((fabs(theta - 90)<-8)&&(fabs(theta - 90)>-10)) omiga=-4;
-//	if((fabs(theta - 90)<-10)) omiga=-5;
-	PID__config(&motor_a[0]->motor_pid,0.58f,1.25f,0,10,10,70,10); //1.44p 50i
-	PID__config(&motor_a[1]->motor_pid,0.58f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[2]->motor_pid,0.58f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[3]->motor_pid,0.58f,1.25f,0,10,10,70,10);
+	
+	if(fabs(theta - 900)>80) omiga=-0.2;
+	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.0025*(theta - 900); //正为逆时针，负为顺时针
+	if(fabs(theta - 900)<=-80) omiga=0.2;
+	motor_a[0]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
+	motor_a[1]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
+	motor_a[2]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
+	motor_a[3]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
+	
+	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段
+	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
+	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
+	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	Speed__bekommen(&ecd[0]);
 	if(Dir__bekommen(&ecd[0])) ecd[0]._speed=-(ecd[0]._speed);
 	Speed__bekommen(&ecd[1]);
@@ -200,57 +199,61 @@ void test1()
 	motor_a[2]->actual_speed=ecd[2]._speed;
 	motor_a[3]->actual_speed=ecd[3]._speed;
 	//坐标系原点为左上角
-	if((Target_D_X>5)&&(fabs(Target_D_Y)>5)) //右
-	{
-		motor_a[0]->target_speed=1.0;
-		motor_a[1]->target_speed=-1.0;
-		motor_a[2]->target_speed=1.0;
-		motor_a[3]->target_speed=-1.0;
-	}
-	else if((Target_D_X<-5)&&(fabs(Target_D_Y)>5)) //左
-	{
-		motor_a[0]->target_speed=-1.0;
-		motor_a[1]->target_speed=1.0;
-		motor_a[2]->target_speed=-1.0;
-		motor_a[3]->target_speed=1.0;
-	}
-	else if((Target_D_X>5)&&(fabs(Target_D_Y)<5)) //右
-	{
-		motor_a[0]->target_speed=1.0;
-		motor_a[1]->target_speed=-1.0;
-		motor_a[2]->target_speed=1.0;
-		motor_a[3]->target_speed=-1.0;
-	}
-	else if((Target_D_X<-5)&&(fabs(Target_D_Y)<5)) //左
-	{
-		motor_a[0]->target_speed=-1.0;
-		motor_a[1]->target_speed=1.0;
-		motor_a[2]->target_speed=-1.0;
-		motor_a[3]->target_speed=1.0;
-	}
-	else if((fabs(Target_D_X)<5)&&(Target_D_Y>5))  //后
-	{
-		motor_a[0]->target_speed=-1.0;
-		motor_a[1]->target_speed=-1.0;
-		motor_a[2]->target_speed=-1.0;
-		motor_a[3]->target_speed=-1.0;
-	}
-	else if((fabs(Target_D_X)<5)&&(Target_D_Y<-5))  //前
-	{
-		motor_a[0]->target_speed=1.0;
-		motor_a[1]->target_speed=1.0;
-		motor_a[2]->target_speed=1.0;
-		motor_a[3]->target_speed=1.0;
-	}
 	
+	if((fabs(Target_D_X)<=5)||(X_location<19)) straight_flag=1;
 	
-	if((fabs(Target_D_X)<5)&(fabs(Target_D_Y)<5)&(step<Step_Count))
+	if((Target_D_X>5)&&(straight_flag==0)) //右
+	{
+		motor_a[0]->target_speed=0.4;//-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.4;//-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.4;//+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.4;//+motor_a[3]->angel_speed;
+	}
+	else if((Target_D_X<=-5)&&(straight_flag==0)) //左
+	{
+		motor_a[0]->target_speed=-0.4;//-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.4;//-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.4;//+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.4;//+motor_a[3]->angel_speed;
+	}
+	else if((fabs(Target_D_X)<5)&&(straight_flag==0))
+	{
+		straight_flag=1;
+	}
+	else if((Target_D_Y>5)&&(straight_flag==1))  //后
+	{
+		motor_a[0]->target_speed=-0.4;//-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.4;//-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.4;//+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.4;//+motor_a[3]->angel_speed;
+	}
+	else if((Target_D_Y<=-5)&&(straight_flag==1))  //前
+	{
+		motor_a[0]->target_speed=0.4;//-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.4;//-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.4;//+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.4;//+motor_a[3]->angel_speed;
+	}
+	else if((fabs(Target_D_X)>5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
+	{
+		straight_flag=0;
+	}
+//	else if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
+//	{
+//		motor_output(motor_a[0],0);
+//		motor_output(motor_a[1],0);
+//		motor_output(motor_a[2],0);
+//		motor_output(motor_a[3],0);
+//	}
+	
+	if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
 		Elec_flag=1;
+		straight_flag=0;
 		delay_ms(200);
 //		step++;
 		return;
@@ -259,17 +262,17 @@ void test1()
 //	Actual_D += ecd[0]._speed*0.01;
 	if(motor_a[0]->target_speed==-(motor_a[1]->target_speed))
 	{
-		motor_a[0]->duty=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[1]->actual_speed), motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[3]->actual_speed), motor_a[0]->actual_speed);
-		motor_a[1]->duty=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[0]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[2]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
-		motor_a[2]->duty=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[0]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), -(motor_a[1]->actual_speed), motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), -(motor_a[3]->actual_speed), motor_a[2]->actual_speed);
-		motor_a[3]->duty=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), -(motor_a[0]->actual_speed), motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[1]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), -(motor_a[2]->actual_speed), motor_a[3]->actual_speed);
+		motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[1]->actual_speed), motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), -(motor_a[3]->actual_speed), motor_a[0]->actual_speed);
+		motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[0]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), -(motor_a[2]->actual_speed), motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
+		motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[0]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), -(motor_a[1]->actual_speed), motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), -(motor_a[3]->actual_speed), motor_a[2]->actual_speed);
+		motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), -(motor_a[0]->actual_speed), motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[1]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), -(motor_a[2]->actual_speed), motor_a[3]->actual_speed);
 	}
 	else
 	{
-		motor_a[0]->duty=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[1]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[3]->actual_speed, motor_a[0]->actual_speed);
-		motor_a[1]->duty=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[0]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[2]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
-		motor_a[2]->duty=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[0]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[1]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[3]->actual_speed, motor_a[2]->actual_speed);
-		motor_a[3]->duty=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[0]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[1]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[2]->actual_speed, motor_a[3]->actual_speed);
+		motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[1]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[3]->actual_speed, motor_a[0]->actual_speed);
+		motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[0]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[2]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
+		motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[0]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[1]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[3]->actual_speed, motor_a[2]->actual_speed);
+		motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[0]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[1]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[2]->actual_speed, motor_a[3]->actual_speed);
 	
 	}
 	if(motor_a[0]->duty>1.0f) motor_a[0]->duty=1.0f;
@@ -296,7 +299,7 @@ void test()
 	int duty_temp=0;
 	float duty_temp_1;
 	int i=0;
-	char str[3];
+//	char str[3];
 	PID__config(&motor_a[0]->motor_pid,0.64f,1.25f,0,10,10,70,10); //1.44p 50i
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.64f,1.25f,0,10,10,70,10);

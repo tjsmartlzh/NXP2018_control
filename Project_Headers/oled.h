@@ -11,11 +11,11 @@
 #include "includes.h"
 
 
-//	SIU.PCR[72].R = 0x0200;//OLED     E8 E7
-//	SIU.PCR[74].R = 0x0200;//OLED     E10 D14
-//	SIU.PCR[75].R = 0x0200;//OLED     E11 D15
-//	SIU.PCR[42].R = 0x0200;//OLED     C10 C4
-//	SIU.PCR[17].R = 0x0200;//OLED     B1 A15
+//	SIU.PCR[72].R = 0x0200;//OLED     E8 
+//	SIU.PCR[74].R = 0x0200;//OLED     E10 
+//	SIU.PCR[75].R = 0x0200;//OLED     E11 
+//	SIU.PCR[42].R = 0x0200;//OLED     C10 
+//	SIU.PCR[17].R = 0x0200;//OLED     B1 
 
 #define OLED_CS_PIN   72	///< Ƭѡ (Chip Select) //72
 #define OLED_DC_PIN   74	///< Data/Command Control //74
