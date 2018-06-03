@@ -31,6 +31,7 @@ int sum_temp=0;
 //extern uint8_t RC__flag;
 int C_flag;
 uint32_t time,last_time;
+extern float Target_D_X_R,Target_D_Y_R;
 
 void LINFlex_TX(unsigned char data)
 {
@@ -189,7 +190,7 @@ void LINFlex_RX(void)
 		Y_location=data[1]*256+data[2];    // µº ªªÀ„
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(step<Step_Count))
+		if((fabs(Target_D_X_R)<=5)&&(fabs(Target_D_Y_R)<=5)&&(step<Step_Count))
 		{
 			step++;
 		}

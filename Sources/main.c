@@ -223,39 +223,39 @@ void test1()
 	
 	if((fabs(Target_D_X)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
 	
-	if((Target_D_X>5)&&(straight_flag==0)) //右
+	if((Target_D_X_R>5)&&(straight_flag==0)) //右
 	{
 		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
-	else if((Target_D_X<=-5)&&(straight_flag==0)) //左
+	else if((Target_D_X_R<=-5)&&(straight_flag==0)) //左
 	{
 		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
 	}
-	else if((fabs(Target_D_X)<5)&&(straight_flag==0))
+	else if((fabs(Target_D_X_R)<5)&&(straight_flag==0))
 	{
 		straight_flag=1;
 	}
-	else if((Target_D_Y>5)&&(straight_flag==1))  //后
+	else if((Target_D_Y_R>5)&&(straight_flag==1))  //后
 	{
 		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
-	else if((Target_D_Y<=-5)&&(straight_flag==1))  //前
+	else if((Target_D_Y_R<=-5)&&(straight_flag==1))  //前
 	{
 		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
 	}
-	else if(((fabs(Target_D_X)>5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
+	else if(((fabs(Target_D_X_R)>5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
 	{
 		straight_flag=0;
 	}
@@ -267,7 +267,7 @@ void test1()
 //		motor_output(motor_a[3],0);
 //	}
 	
-	if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
+	if((fabs(Target_D_X_R)<=5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
