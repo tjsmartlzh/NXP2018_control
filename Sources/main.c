@@ -36,6 +36,10 @@ extern int sum_temp;
 float omiga;
 int straight_flag=0;
 extern C_flag;
+extern uint32_t time,last_time;
+uint32_t time_0;
+float delta;
+float Target_D_X_R,Target_D_Y_R;
 
 #define half_track_dis 0.21 //待测
 #define half_wheel_dis 0.16 //待测
@@ -157,6 +161,7 @@ void test1()
 //	float duty_temp_1;
 	int i=0;
 //	float Target_Speed;
+	float temp;
 	Mode0_Quick();
 	if((Start_Flag==0)||(step>=Step_Count)) 
 	{
@@ -174,18 +179,14 @@ void test1()
 		Send_Flag=0;
 	}
 	
-	if(fabs(theta - 900)>80) omiga=-0.2;
-	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.0025*(theta - 900); //正为逆时针，负为顺时针
-	if(fabs(theta - 900)<=-80) omiga=0.2;
+	if(fabs(theta - 900)>80) omiga=-0.44;
+	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //正为逆时针，负为顺时针
+	if(fabs(theta - 900)<=-80) omiga=0.44;
 	motor_a[0]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[1]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[2]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[3]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	
-	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段
-	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
-	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
-	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	Speed__bekommen(&ecd[0]);
 	if(Dir__bekommen(&ecd[0])) ecd[0]._speed=-(ecd[0]._speed);
 	Speed__bekommen(&ecd[1]);
@@ -200,21 +201,41 @@ void test1()
 	motor_a[3]->actual_speed=ecd[3]._speed;
 	//坐标系原点为左上角
 	
-	if((fabs(Target_D_X)<=5)||(X_location<19)) straight_flag=1;
+	time=STM.CNT.R;
+	if(time<last_time)
+	{
+		time_0=time+0xffffffff-last_time;
+	}
+	else
+	{
+		time_0=time-last_time;
+	}
+	delta=time_0/1000000.0f;
+	
+	if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
+	{
+		Target_D_Y_R=Target_D_Y+delta*(motor_a[0]->actual_speed);
+	}
+	else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
+	{
+		Target_D_X_R=Target_D_X-delta*(motor_a[0]->actual_speed);
+	}
+	
+	if((fabs(Target_D_X)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
 	
 	if((Target_D_X>5)&&(straight_flag==0)) //右
 	{
-		motor_a[0]->target_speed=0.4;//-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=-0.4;//-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=0.4;//+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=-0.4;//+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
 	else if((Target_D_X<=-5)&&(straight_flag==0)) //左
 	{
-		motor_a[0]->target_speed=-0.4;//-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=0.4;//-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=-0.4;//+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=0.4;//+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
 	}
 	else if((fabs(Target_D_X)<5)&&(straight_flag==0))
 	{
@@ -222,19 +243,19 @@ void test1()
 	}
 	else if((Target_D_Y>5)&&(straight_flag==1))  //后
 	{
-		motor_a[0]->target_speed=-0.4;//-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=-0.4;//-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=-0.4;//+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=-0.4;//+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
 	else if((Target_D_Y<=-5)&&(straight_flag==1))  //前
 	{
-		motor_a[0]->target_speed=0.4;//-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=0.4;//-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=0.4;//+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=0.4;//+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
 	}
-	else if((fabs(Target_D_X)>5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
+	else if(((fabs(Target_D_X)>5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
 	{
 		straight_flag=0;
 	}
@@ -258,6 +279,11 @@ void test1()
 //		step++;
 		return;
 	}
+
+	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段
+	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
+	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
+	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	
 //	Actual_D += ecd[0]._speed*0.01;
 	if(motor_a[0]->target_speed==-(motor_a[1]->target_speed))
@@ -343,7 +369,7 @@ void test()
 //		break;
 //	}
 //	}
-	Target_D=3.0f;
+	Target_D=1.0f;
 	Speed__bekommen(&ecd[0]);
 	if(Dir__bekommen(&ecd[0])) ecd[0]._speed=-(ecd[0]._speed);
 	Speed__bekommen(&ecd[1]);
@@ -392,15 +418,15 @@ void test()
 //	break;
 //	}
 //	}
-	//Actual_D += ecd[0]._speed*0.01;
-	//if(fabs(Actual_D)>=Target_D) 
-	//{
-		//motor_output(motor_a[0],0);
-		//motor_output(motor_a[1],0);
-		//motor_output(motor_a[2],0);
-		//motor_output(motor_a[3],0);
-		//return;
-	//}
+	Actual_D += ecd[0]._speed*0.01;
+	if(fabs(Actual_D)>=Target_D) 
+	{
+		motor_output(motor_a[0],0);
+		motor_output(motor_a[1],0);
+		motor_output(motor_a[2],0);
+		motor_output(motor_a[3],0);
+		return;
+	}
 	if(motor_a[0]->duty>1.0f) motor_a[0]->duty=1.0f;
 	if(motor_a[0]->duty<-1.0f) motor_a[0]->duty=-1.0f;
 	if(motor_a[1]->duty>1.0f) motor_a[1]->duty=1.0f;
@@ -412,9 +438,9 @@ void test()
 	PIT__clear_flag(PIT_Timer1);
 	duty_temp_1=0.4;
 	motor_output(motor_a[0],duty_temp_1);
-	motor_output(motor_a[1],duty_temp_1);
+	motor_output(motor_a[1],-duty_temp_1);
 	motor_output(motor_a[2],duty_temp_1);
-	motor_output(motor_a[3],duty_temp_1);
+	motor_output(motor_a[3],-duty_temp_1);
 	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 //	f2s(ecd[0]._speed,str);
 //	BlueTx(str);

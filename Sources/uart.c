@@ -10,6 +10,7 @@
 #include "IntcInterrupts.h"
 #include "gpio.h"
 #include "math.h"
+#include "MPC5604B.h"
 float X_location,Y_location,X_last_location,X_last_last_location,X_error,X_last_error,theta;  
 uint8_t data[4];
 uint8_t pramdata[32]; //增加数组长度，扩展通信协议
@@ -29,6 +30,8 @@ float Target_D_X,Target_D_Y;
 int sum_temp=0;
 //extern uint8_t RC__flag;
 int C_flag;
+uint32_t time,last_time;
+
 void LINFlex_TX(unsigned char data)
 {
 	LINFLEX_0.BDRL.B.DATA0 = data;       //发送语句
@@ -149,7 +152,7 @@ void LINFlex_RX(void)
 	case 'Y': 
 //		points[5]=data[2]-'0';    //调试换算
 		points[5]=data[1]*256+data[2];    //实际换算
-		sum_temp+=points[5];
+//		sum_temp+=points[5];
 		destination[1][Step_Count]=(points[5]-1)*50+25; //单位待定
 		Step_Count++;
 		if(Step_Count==Step_Count_R)
@@ -170,13 +173,13 @@ void LINFlex_RX(void)
 //		points[2]=data[2]-'0';    //调试换算
 //		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
 		X_location=data[1]*256+data[2];    //实际换算
-		X_error=X_last_location-X_location;
-		X_last_location=X_location;
-		X_last_error=X_last_last_location-X_last_location;
-		X_last_last_location=X_last_location;
+//		X_error=X_last_location-X_location;
+//		X_last_location=X_location;
+//		X_last_error=X_last_last_location-X_last_location;
+//		X_last_last_location=X_last_location;
 		Target_D_X=destination[0][step]-X_location;
-		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
-		
+//		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
+//		
 	break;
 	case 'y': 
 //		points[3]=data[0]-'0';    //调试换算
@@ -190,6 +193,7 @@ void LINFlex_RX(void)
 		{
 			step++;
 		}
+		last_time=STM.CNT.R;
 	break;
 
 	case 'a': 
