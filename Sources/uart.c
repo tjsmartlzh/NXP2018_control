@@ -32,6 +32,10 @@ int sum_temp=0;
 int C_flag;
 uint32_t time,last_time;
 extern float Target_D_X_R,Target_D_Y_R;
+//for kalman filter
+float optimumCovariance_X, optimumCovariance_Y,kalmanGain_X, kalmanGain_Y, optimum_X, optimum_Y, estimate_X, estimate_Y;
+//float estimateCovariance_X = INITIAL_COVARIANCE,estimateCovariance_Y = INITIAL_COVARIANCE;;
+
 
 void LINFlex_TX(unsigned char data)
 {
@@ -190,7 +194,7 @@ void LINFlex_RX(void)
 		Y_location=data[1]*256+data[2];    // µº ªªÀ„
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X_R)<=5)&&(fabs(Target_D_Y_R)<=5)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(step<Step_Count))
 		{
 			step++;
 		}

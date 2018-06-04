@@ -39,7 +39,10 @@ extern C_flag;
 extern uint32_t time,last_time;
 uint32_t time_0;
 float delta;
-float Target_D_X_R,Target_D_Y_R;
+float Target_D_X_R=10,Target_D_Y_R=10;
+extern float optimumCovariance_X, optimumCovariance_Y,kalmanGain_X, kalmanGain_Y, optimum_X, optimum_Y, estimate_X, estimate_Y;
+extern float estimateCovariance_X,estimateCovariance_Y;
+
 
 #define half_track_dis 0.21 //´ý²â
 #define half_wheel_dis 0.16 //´ý²â
@@ -141,7 +144,7 @@ void Mode0_Quick(void)
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(motor_a[3]->actual_speed);
+	OLED_Float(Target_D_X_R);
 	
 //	OLED_SetPointer(7,0);
 //	OLED_Str("");
@@ -169,6 +172,7 @@ void test1()
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
+		SIU.GPDO[12].B.PDO=1;
 		return;
 	}
 	SIU.GPDO[12].B.PDO=!SIU.GPDO[12].B.PDO;
@@ -214,14 +218,20 @@ void test1()
 	
 	if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
 	{
-		Target_D_Y_R=Target_D_Y+delta*(motor_a[0]->actual_speed);
+		Target_D_Y_R=Target_D_Y+delta*(motor_a[0]->actual_speed)*0.54;
 	}
 	else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
 	{
-		Target_D_X_R=Target_D_X-delta*(motor_a[0]->actual_speed);
+		Target_D_X_R=Target_D_X-delta*(motor_a[0]->actual_speed)*0.52;
+	}
+	else if(motor_a[0]->actual_speed==0)
+	{
+		Target_D_Y_R=Target_D_Y;
+		Target_D_X_R=Target_D_X;
 	}
 	
-	if((fabs(Target_D_X)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
+	
+	if((fabs(Target_D_X_R)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
 	
 	if((Target_D_X_R>5)&&(straight_flag==0)) //ÓÒ
 	{
@@ -243,17 +253,17 @@ void test1()
 	}
 	else if((Target_D_Y_R>5)&&(straight_flag==1))  //ºó
 	{
-		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=-0.4-1.5*motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.4-1.5*motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.4+1.5*motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.4+1.5*motor_a[3]->angel_speed;
 	}
 	else if((Target_D_Y_R<=-5)&&(straight_flag==1))  //Ç°
 	{
-		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
-		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
-		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
-		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
+		motor_a[0]->target_speed=0.4-1.5*motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.4-1.5*motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.4+1.5*motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.4+1.5*motor_a[3]->angel_speed;
 	}
 	else if(((fabs(Target_D_X_R)>5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
 	{
@@ -277,6 +287,7 @@ void test1()
 		straight_flag=0;
 		delay_ms(200);
 //		step++;
+		SIU.GPDO[14].B.PDO=1;
 		return;
 	}
 
