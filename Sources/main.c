@@ -42,10 +42,12 @@ float delta;
 float Target_D_X_R=10,Target_D_Y_R=10;
 extern float optimumCovariance_X, optimumCovariance_Y,kalmanGain_X, kalmanGain_Y, optimum_X, optimum_Y, estimate_X, estimate_Y;
 extern float estimateCovariance_X,estimateCovariance_Y;
+extern int stop_flag;
+extern int die_flag;
+extern int elec_flag;
 
-
-#define half_track_dis 0.21 //´ı²â
-#define half_wheel_dis 0.16 //´ı²â
+#define half_track_dis 0.21 //å¾…æµ‹
+#define half_wheel_dis 0.16 //å¾…æµ‹
 //extern X_distance;
 //extern Y_distance;
 //extern EMIOSn_CH forward_ch_r[4]={EMIOS_CH2,EMIOS_CH3,EMIOS_CH4,EMIOS_CH5};
@@ -69,15 +71,17 @@ int main(void)
 	Encoder__config(&ecd[0],EMIOS_CH8,1,390,10,0.0574,2);  //A8,A2
 	Encoder__config(&ecd[1],EMIOS_CH16,1,390,10,0.0574,47);  //E0,C15
 	Encoder__config(&ecd[2],EMIOS_CH24,1,390,10,0.0574,1);  //D12,A1
-	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.0574,41); //A0,C9Ô­±¾ÊÇ¶æ»úµÄÊ±»ù£¬´Ë´¦Ôİ²»¿¼ÂÇ¶æ»úµÄÊ¹ÓÃ£¬¹ÊÔİÓÃÀ´×öÊäÈë¼ì²â
+	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.0574,41); //A0,C9åŸæœ¬æ˜¯èˆµæœºçš„æ—¶åŸºï¼Œæ­¤å¤„æš‚ä¸è€ƒè™‘èˆµæœºçš„ä½¿ç”¨ï¼Œæ•…æš‚ç”¨æ¥åšè¾“å…¥æ£€æµ‹
 	Encoder__init(&ecd[0]);
 	Encoder__init(&ecd[1]); 
 	Encoder__init(&ecd[2]);
 	Encoder__init(&ecd[3]);
 	GPIO__output__enable(14);
 	GPIO__output__enable(12);
-	GPIO__output__enable(71);  //E7  ÍÆÀ­»ú¹¹
-	GPIO__output__enable(45);  //C13 µç´ÅÌú
+	GPIO__output__enable(71);  //E7  æ¨æ‹‰æœºæ„
+	GPIO__output__enable(45);  //C13 ç”µç£é“
+	SIU.GPDO[45].B.PDO=0;
+	SIU.GPDO[71].B.PDO=1;
 	PIT__config(PIT_Timer1,10,64,test1,10);
 	str[0]=0x66;
 	str[1]=0x55;
@@ -89,24 +93,32 @@ int main(void)
 //		f2s(123,str);
 //		BlueTx(str);
 //		Mode0_Quick();
-		if((Elec_flag==1)&&(step%2==0))
+		if((elec_flag==1))
 		{
-			SIU.GPDO[45].B.PDO=1;
+			motor_output(motor_a[0],0);
+			motor_output(motor_a[1],0);
+			motor_output(motor_a[2],0);
+			motor_output(motor_a[3],0);
+			PIT__stop(PIT_Timer1);
+			SIU.GPDO[71].B.PDO=(step%2);
+			delay_ms(500);
+			SIU.GPDO[45].B.PDO=!(step%2);
 			delay_ms(500);
 			SIU.GPDO[71].B.PDO=1;
-			Elec_flag=0;
+			elec_flag=0;
+			PIT__restart(PIT_Timer1);
 		}
-		else if((Elec_flag==1)&&(step%2==1))
-		{
-			SIU.GPDO[71].B.PDO=0;
-			delay_ms(500);
-			SIU.GPDO[45].B.PDO=0;
-			Elec_flag=0;
-		}
-		else
-		{
-			;
-		}
+//		else if((Elec_flag==1)&&(step%2==1))
+//		{
+//			SIU.GPDO[71].B.PDO=0;
+//			delay_ms(500);
+//			SIU.GPDO[45].B.PDO=0;
+//			Elec_flag=0;
+//		}
+//		else
+//		{
+//			;
+//		}
 	}
 }
 
@@ -144,7 +156,7 @@ void Mode0_Quick(void)
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(Target_D_X_R);
+	OLED_Num(elec_flag);
 	
 //	OLED_SetPointer(7,0);
 //	OLED_Str("");
@@ -166,14 +178,51 @@ void test1()
 //	float Target_Speed;
 	float temp;
 	Mode0_Quick();
-	if((Start_Flag==0)||(step>=Step_Count)) 
+	if((Start_Flag==0)) 
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
+//		SIU.GPDO[71].B.PDO=(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[45].B.PDO=!(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[71].B.PDO=1;
 		SIU.GPDO[12].B.PDO=1;
+//		step++;
+//		stop_flag=0;
+//		straight_flag=0;
+		PIT__clear_flag(PIT_Timer1);
 		return;
+	}
+	if((stop_flag)||(step>=Step_Count))
+	{
+		step++;
+		motor_output(motor_a[0],0);
+		motor_output(motor_a[1],0);
+		motor_output(motor_a[2],0);
+		motor_output(motor_a[3],0);
+//		SIU.GPDO[71].B.PDO=(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[45].B.PDO=!(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[71].B.PDO=1;
+		SIU.GPDO[12].B.PDO=1;
+//		step++;
+		stop_flag=0;
+		straight_flag=0;
+		PIT__clear_flag(PIT_Timer1);
+		return;
+	}
+	if(elec_flag)
+	{
+//		SIU.GPDO[71].B.PDO=(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[45].B.PDO=!(step%2);
+//		delay_ms(200);
+//		SIU.GPDO[71].B.PDO=1;
+//		elec_flag=0;
 	}
 	SIU.GPDO[12].B.PDO=!SIU.GPDO[12].B.PDO;
 	if(Send_Flag==1)
@@ -184,7 +233,7 @@ void test1()
 	}
 	
 	if(fabs(theta - 900)>80) omiga=-0.44;
-	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //ÕıÎªÄæÊ±Õë£¬¸ºÎªË³Ê±Õë
+	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //æ­£ä¸ºé€†æ—¶é’ˆï¼Œè´Ÿä¸ºé¡ºæ—¶é’ˆ
 	if(fabs(theta - 900)<=-80) omiga=0.44;
 	motor_a[0]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[1]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
@@ -203,7 +252,7 @@ void test1()
 	motor_a[1]->actual_speed=ecd[1]._speed;
 	motor_a[2]->actual_speed=ecd[2]._speed;
 	motor_a[3]->actual_speed=ecd[3]._speed;
-	//×ø±êÏµÔ­µãÎª×óÉÏ½Ç
+	//åæ ‡ç³»åŸç‚¹ä¸ºå·¦ä¸Šè§’
 	
 	time=STM.CNT.R;
 	if(time<last_time)
@@ -233,37 +282,66 @@ void test1()
 	
 	if((fabs(Target_D_X_R)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
 	
-	if((Target_D_X_R>5)&&(straight_flag==0)) //ÓÒ
+	if((Target_D_X_R>50)&&(straight_flag==0)) //Ã“Ã’
 	{
 		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
-	else if((Target_D_X_R<=-5)&&(straight_flag==0)) //×ó
+	else if((Target_D_X_R<=50)&&(Target_D_X_R>5)&&(straight_flag==0)) //Ã—Ã³
+	{
+		motor_a[0]->target_speed=0.25-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.25-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.25+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.25+motor_a[3]->angel_speed;
+	}
+	
+	else if((Target_D_X_R<=-50)&&(straight_flag==0)) //Ã—Ã³
 	{
 		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
+	}
+	else if((Target_D_X_R<=-5)&&(Target_D_X_R>-50)&&(straight_flag==0)) //Ã—Ã³
+	{
+		motor_a[0]->target_speed=-0.25-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.25-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.25+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.25+motor_a[3]->angel_speed;
 	}
 	else if((fabs(Target_D_X_R)<5)&&(straight_flag==0))
 	{
 		straight_flag=1;
 	}
-	else if((Target_D_Y_R>5)&&(straight_flag==1))  //ºó
+	else if((Target_D_Y_R>50)&&(straight_flag==1))  //ÂºÃ³
 	{
 		motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
 	}
-	else if((Target_D_Y_R<=-5)&&(straight_flag==1))  //Ç°
+	else if((Target_D_Y_R<=50)&&(Target_D_Y_R>5)&&(straight_flag==1))  //ÂºÃ³
+	{
+		motor_a[0]->target_speed=-0.25-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=-0.25-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=-0.25+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=-0.25+motor_a[3]->angel_speed;
+	}
+	else if((Target_D_Y_R<=-50)&&(straight_flag==1))  //Ã‡Â°
 	{
 		motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
 		motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
 		motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
+	}
+	else if((Target_D_Y_R<=-5)&&(Target_D_Y_R>-50)&&(straight_flag==1))  //Ã‡Â°
+	{
+		motor_a[0]->target_speed=0.25-motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=0.25-motor_a[1]->angel_speed;
+		motor_a[2]->target_speed=0.25+motor_a[2]->angel_speed;
+		motor_a[3]->target_speed=0.25+motor_a[3]->angel_speed;
 	}
 	else if(((fabs(Target_D_X_R)>5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
 	{
@@ -283,15 +361,31 @@ void test1()
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
-		Elec_flag=1;
-		straight_flag=0;
-		delay_ms(200);
-//		step++;
-		SIU.GPDO[14].B.PDO=1;
+		PIT__clear_flag(PIT_Timer1);
 		return;
 	}
+//		Elec_flag=1;
+//		straight_flag=0;
+//		delay_ms(200);
+//		step++;
+//		SIU.GPDO[45].B.PDO=!(step%2);
+//		delay_ms(500);
+//		SIU.GPDO[71].B.PDO=!(step%2);
+//		delay_ms(500);
+//		SIU.GPDO[71].B.PDO=(step%2);
+//		SIU.GPDO[14].B.PDO=1;
+//		return;
+//	}
+	
+	if(die_flag)
+	{
+		motor_a[0]->target_speed=0.25;
+		motor_a[1]->target_speed=0.25;
+		motor_a[2]->target_speed=0.25;
+		motor_a[3]->target_speed=0.25;
+	}
 
-	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //ĞèÒª¶ÔPID·Ö¶Î
+	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //éœ€è¦å¯¹PIDåˆ†æ®µ
 	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
@@ -337,6 +431,7 @@ void test()
 	float duty_temp_1;
 	int i=0;
 //	char str[3];
+	Mode0_Quick();
 	PID__config(&motor_a[0]->motor_pid,0.64f,1.25f,0,10,10,70,10); //1.44p 50i
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.64f,1.25f,0,10,10,70,10);
@@ -363,10 +458,10 @@ void test()
 //	}
 //	case 'y':
 //	{
-		motor_a[0]->target_speed=1.0;
-		motor_a[1]->target_speed=1.0;
-		motor_a[2]->target_speed=1.0;
-		motor_a[3]->target_speed=1.0;
+		motor_a[0]->target_speed=0.4;
+		motor_a[1]->target_speed=0.4;
+		motor_a[2]->target_speed=0.4;
+		motor_a[3]->target_speed=0.4;
 //		Target_D=Y_distance_B;
 //		break;
 //	}
@@ -429,15 +524,20 @@ void test()
 //	break;
 //	}
 //	}
-	Actual_D += ecd[0]._speed*0.01;
-	if(fabs(Actual_D)>=Target_D) 
-	{
-		motor_output(motor_a[0],0);
-		motor_output(motor_a[1],0);
-		motor_output(motor_a[2],0);
-		motor_output(motor_a[3],0);
-		return;
-	}
+	motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed);//+PID__update(&(motor_a[0]->motor_pid), motor_a[1]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[2]->actual_speed, motor_a[0]->actual_speed)+PID__update(&(motor_a[0]->motor_pid), motor_a[3]->actual_speed, motor_a[0]->actual_speed);
+	motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed);//+PID__update(&(motor_a[1]->motor_pid), motor_a[0]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[2]->actual_speed, motor_a[1]->actual_speed)+PID__update(&(motor_a[1]->motor_pid), motor_a[3]->actual_speed, motor_a[1]->actual_speed);
+	motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed);//+PID__update(&(motor_a[2]->motor_pid), motor_a[0]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[1]->actual_speed, motor_a[2]->actual_speed)+PID__update(&(motor_a[2]->motor_pid), motor_a[3]->actual_speed, motor_a[2]->actual_speed);
+	motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed);//+PID__update(&(motor_a[3]->motor_pid), motor_a[0]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[1]->actual_speed, motor_a[3]->actual_speed)+PID__update(&(motor_a[3]->motor_pid), motor_a[2]->actual_speed, motor_a[3]->actual_speed);
+
+//	Actual_D += ecd[0]._speed*0.01;
+//	if(fabs(Actual_D)>=Target_D) 
+//	{
+//		motor_output(motor_a[0],0);
+//		motor_output(motor_a[1],0);
+//		motor_output(motor_a[2],0);
+//		motor_output(motor_a[3],0);
+//		return;
+//	}
 	if(motor_a[0]->duty>1.0f) motor_a[0]->duty=1.0f;
 	if(motor_a[0]->duty<-1.0f) motor_a[0]->duty=-1.0f;
 	if(motor_a[1]->duty>1.0f) motor_a[1]->duty=1.0f;
@@ -448,10 +548,10 @@ void test()
 	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
 	PIT__clear_flag(PIT_Timer1);
 	duty_temp_1=0.4;
-	motor_output(motor_a[0],duty_temp_1);
-	motor_output(motor_a[1],-duty_temp_1);
-	motor_output(motor_a[2],duty_temp_1);
-	motor_output(motor_a[3],-duty_temp_1);
+	motor_output(motor_a[0],motor_a[0]->duty);
+	motor_output(motor_a[1],motor_a[1]->duty);
+	motor_output(motor_a[2],motor_a[2]->duty);
+	motor_output(motor_a[3],motor_a[3]->duty);
 	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 //	f2s(ecd[0]._speed,str);
 //	BlueTx(str);

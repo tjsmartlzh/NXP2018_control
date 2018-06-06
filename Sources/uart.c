@@ -10,6 +10,7 @@
 #include "IntcInterrupts.h"
 #include "gpio.h"
 #include "math.h"
+#include "delay.h"
 #include "MPC5604B.h"
 float X_location,Y_location,X_last_location,X_last_last_location,X_error,X_last_error,theta;  
 uint8_t data[4];
@@ -30,12 +31,15 @@ float Target_D_X,Target_D_Y;
 int sum_temp=0;
 //extern uint8_t RC__flag;
 int C_flag;
-uint32_t time,last_time;
+uint32_t time,last_time,time_before_last_time;
 extern float Target_D_X_R,Target_D_Y_R;
 //for kalman filter
 float optimumCovariance_X, optimumCovariance_Y,kalmanGain_X, kalmanGain_Y, optimum_X, optimum_Y, estimate_X, estimate_Y;
 //float estimateCovariance_X = INITIAL_COVARIANCE,estimateCovariance_Y = INITIAL_COVARIANCE;;
-
+int stop_flag;
+float delta_uart_time;
+int die_flag;
+int elec_flag;
 
 void LINFlex_TX(unsigned char data)
 {
@@ -196,9 +200,19 @@ void LINFlex_RX(void)
 
 		if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(step<Step_Count))
 		{
-			step++;
+//			SIU.GPDO[45].B.PDO=!(step%2);
+//			delay_ms(1000);
+//			SIU.GPDO[71].B.PDO=!(step%2);
+//			delay_ms(1000);
+//			SIU.GPDO[71].B.PDO=(step%2);
+			stop_flag=1;
+			elec_flag=1;
 		}
+//		time_before_last_time=last_time;
 		last_time=STM.CNT.R;
+//		if(last_time<time_before_last_time) delta_uart_time=(last_time-time_before_last_time+0xffffffff)/1000000.0f;
+//		else delta_uart_time=(last_time-time_before_last_time)/1000000.0f;
+//		if(delta_uart_time>2) die_flag=1;
 	break;
 
 	case 'a': 

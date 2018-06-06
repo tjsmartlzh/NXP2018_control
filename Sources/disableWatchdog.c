@@ -5,6 +5,7 @@
  *      Author: dell
  */
 #include "MPC5604B.h"
+#include "disableWatchdog.h"
 
 void disableWatchdog(void)
 {
