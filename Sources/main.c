@@ -45,6 +45,8 @@ extern float estimateCovariance_X,estimateCovariance_Y;
 extern int stop_flag;
 extern int die_flag;
 extern int elec_flag;
+extern int direction;
+extern int exit_flag;
 
 #define half_track_dis 0.21 //待测
 #define half_wheel_dis 0.16 //待测
@@ -107,6 +109,38 @@ int main(void)
 			SIU.GPDO[71].B.PDO=1;
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
+		}
+		
+		if(exit_flag)
+		{
+			PIT__stop(PIT_Timer1);
+			switch(direction)
+			{
+			case(LEFT):
+				motor_output(motor_a[0],-0.5);
+				motor_output(motor_a[1],0.5);
+				motor_output(motor_a[2],-0.5);
+				motor_output(motor_a[3],0.5);
+			break;
+			case(RIGHT):
+				motor_output(motor_a[0],0.5);
+				motor_output(motor_a[1],-0.5);
+				motor_output(motor_a[2],0.5);
+				motor_output(motor_a[3],-0.5);
+			break;
+			case(FORWARD):
+				motor_output(motor_a[0],0.5);
+				motor_output(motor_a[1],0.5);
+				motor_output(motor_a[2],0.5);
+				motor_output(motor_a[3],0.5);
+			break;
+			case(BEHIND):
+				motor_output(motor_a[0],-0.5);
+				motor_output(motor_a[1],-0.5);
+				motor_output(motor_a[2],-0.5);
+				motor_output(motor_a[3],-0.5);
+			break;
+			}
 		}
 //		else if((Elec_flag==1)&&(step%2==1))
 //		{
@@ -184,15 +218,6 @@ void test1()
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
-//		SIU.GPDO[71].B.PDO=(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[45].B.PDO=!(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[71].B.PDO=1;
-		SIU.GPDO[12].B.PDO=1;
-//		step++;
-//		stop_flag=0;
-//		straight_flag=0;
 		PIT__clear_flag(PIT_Timer1);
 		return;
 	}
@@ -203,26 +228,17 @@ void test1()
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
-//		SIU.GPDO[71].B.PDO=(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[45].B.PDO=!(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[71].B.PDO=1;
 		SIU.GPDO[12].B.PDO=1;
-//		step++;
 		stop_flag=0;
 		straight_flag=0;
+		if(step==Step_Count)
+		{
+			exit_flag=1;
+	//		PIT__clear_flag(PIT_Timer1);
+	//		return;
+		}
 		PIT__clear_flag(PIT_Timer1);
 		return;
-	}
-	if(elec_flag)
-	{
-//		SIU.GPDO[71].B.PDO=(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[45].B.PDO=!(step%2);
-//		delay_ms(200);
-//		SIU.GPDO[71].B.PDO=1;
-//		elec_flag=0;
 	}
 	SIU.GPDO[12].B.PDO=!SIU.GPDO[12].B.PDO;
 	if(Send_Flag==1)
@@ -280,7 +296,7 @@ void test1()
 	}
 	
 	
-	if((fabs(Target_D_X_R)<=5)||(X_location<18)||(X_location>282)) straight_flag=1; //382
+	if((fabs(Target_D_X_R)<=5)) straight_flag=1; //382
 	
 	if((Target_D_X_R>50)&&(straight_flag==0)) //ÓÒ
 	{
@@ -343,17 +359,10 @@ void test1()
 		motor_a[2]->target_speed=0.25+motor_a[2]->angel_speed;
 		motor_a[3]->target_speed=0.25+motor_a[3]->angel_speed;
 	}
-	else if(((fabs(Target_D_X_R)>5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))||(Y_location<18)||(Y_location>382))
+	else if(((fabs(Target_D_X_R)>5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1)))
 	{
 		straight_flag=0;
 	}
-//	else if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(straight_flag==1))
-//	{
-//		motor_output(motor_a[0],0);
-//		motor_output(motor_a[1],0);
-//		motor_output(motor_a[2],0);
-//		motor_output(motor_a[3],0);
-//	}
 	
 	if((fabs(Target_D_X_R)<=5)&&(fabs(Target_D_Y_R)<=5)&&(straight_flag==1))
 	{
@@ -364,18 +373,6 @@ void test1()
 		PIT__clear_flag(PIT_Timer1);
 		return;
 	}
-//		Elec_flag=1;
-//		straight_flag=0;
-//		delay_ms(200);
-//		step++;
-//		SIU.GPDO[45].B.PDO=!(step%2);
-//		delay_ms(500);
-//		SIU.GPDO[71].B.PDO=!(step%2);
-//		delay_ms(500);
-//		SIU.GPDO[71].B.PDO=(step%2);
-//		SIU.GPDO[14].B.PDO=1;
-//		return;
-//	}
 	
 	if(die_flag)
 	{

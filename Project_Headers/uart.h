@@ -23,6 +23,12 @@ typedef struct
    float b1;
    float b2;
 }pram_t;
+
+#define LEFT 1
+#define RIGHT 2
+#define FORWARD 3
+#define BEHIND 4
+
 void LINFlex_TX(unsigned char data);
 void LINFlex_3TX(unsigned char data);
 

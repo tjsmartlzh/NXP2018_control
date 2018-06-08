@@ -40,6 +40,8 @@ int stop_flag;
 float delta_uart_time;
 int die_flag;
 int elec_flag;
+int direction;
+int exit_flag;
 
 void LINFlex_TX(unsigned char data)
 {
@@ -175,6 +177,18 @@ void LINFlex_RX(void)
 //		pram[0]=pramdata[2];    //µ˜ ‘ªªÀ„
 		pram[0]=data[1]*256+data[2];    // µº ªªÀ„
 		Step_Count_R=pram[0];
+	break;
+	case 'L':
+		direction=LEFT;
+	break;
+	case 'R':
+		direction=RIGHT;
+	break;
+	case 'F':
+		direction=FORWARD;
+	break;
+	case 'B':
+		direction=BEHIND;
 	break;
 	case 'x':
 //		points[0]=data[0]-'0';    //µ˜ ‘ªªÀ„
