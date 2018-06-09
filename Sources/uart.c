@@ -28,7 +28,7 @@ float destination[2][50];
 uint8_t Start_Flag=0,Send_Flag=0;
 int Step_Count=0,Step_Count_R,step=0;
 float Target_D_X,Target_D_Y;
-int sum_temp=0;
+int sum_X=0,sum_Y=0;
 //extern uint8_t RC__flag;
 int C_flag;
 uint32_t time,last_time,time_before_last_time;
@@ -156,15 +156,19 @@ void LINFlex_RX(void)
 	case 'X':
 //		points[2]=data[2]-'0';    //调试换算
 		points[2]=data[1]*256+data[2];    //实际换算
+		sum_X+=points[2];
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		destination[0][Step_Count]=(points[2]-1)*50+25; //单位待定
+		destination[0][Step_Count]=(points[2]-1)*50+25; 
+//		sum_X+=destination[0][Step_Count];
 	break;
 	case 'Y': 
 //		points[5]=data[2]-'0';    //调试换算
 		points[5]=data[1]*256+data[2];    //实际换算
+		sum_Y+=points[5];
 //		sum_temp+=points[5];
-		destination[1][Step_Count]=(points[5]-1)*50+25; //单位待定
+		destination[1][Step_Count]=(points[5]-1)*50+25; 
+//		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
 		if(Step_Count==Step_Count_R)
 		{
@@ -195,7 +199,7 @@ void LINFlex_RX(void)
 //		points[1]=data[1]-'0';    //调试换算
 //		points[2]=data[2]-'0';    //调试换算
 //		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
-		X_location=data[1]*256+data[2];    //实际换算
+		X_location=(int)(data[1]<<8|data[2]);    //实际换算
 //		X_error=X_last_location-X_location;
 //		X_last_location=X_location;
 //		X_last_error=X_last_last_location-X_last_location;
@@ -209,10 +213,10 @@ void LINFlex_RX(void)
 //		points[4]=data[1]-'0';	  //调试换算
 //		points[5]=data[2]-'0';    //调试换算
 //		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
-		Y_location=data[1]*256+data[2];    //实际换算
+		Y_location=(int)(data[1]<<8|data[2]);     //实际换算
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<=5)&&(fabs(Target_D_Y)<=5)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=3)&&(fabs(Target_D_Y)<=3)&&(step<Step_Count))
 		{
 //			SIU.GPDO[45].B.PDO=!(step%2);
 //			delay_ms(1000);
