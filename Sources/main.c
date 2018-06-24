@@ -97,18 +97,22 @@ int main(void)
 			motor_output(motor_a[2],0);
 			motor_output(motor_a[3],0);
 			PIT__stop(PIT_Timer1);
+			LINFLEX_0.UARTCR.B.RXEN = 0;
 			SIU.GPDO[71].B.PDO=(step%2);
 			delay_ms(500);
 			SIU.GPDO[45].B.PDO=!(step%2);
 			delay_ms(500);
 			SIU.GPDO[71].B.PDO=1;
+			delay_ms(200);
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
+			LINFLEX_0.UARTCR.B.RXEN = 1;
 		}
 		
 		if(exit_flag)
 		{
 			PIT__stop(PIT_Timer1);
+			LINFLEX_0.UARTCR.B.RXEN   = 0;
 			switch(direction)
 			{
 			case(LEFT):
@@ -158,7 +162,7 @@ void Mode0_Quick(void)
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(Y_location_R);
+	OLED_Float(destination[0][step]*1000+destination[1][step]);
 }
 
 void test1()
@@ -167,7 +171,7 @@ void test1()
 	int i=0;
 	float temp;
 	Mode0_Quick();
-	if((Start_Flag==0)) 
+	if((Start_Flag==0)||(step>=Step_Count)) 
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
@@ -176,15 +180,15 @@ void test1()
 		PIT__clear_flag(PIT_Timer1);
 		return;
 	}
-	if((stop_flag)||(step>=Step_Count))
+	if(stop_flag)
 	{
 		step++;
+		stop_flag=0;
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
 		motor_output(motor_a[3],0);
 		SIU.GPDO[12].B.PDO=1;
-		stop_flag=0;
 		if(step==Step_Count)
 		{
 			exit_flag=1;
@@ -195,9 +199,9 @@ void test1()
 	SIU.GPDO[12].B.PDO=!SIU.GPDO[12].B.PDO;
 	if(Send_Flag==1)
 	{
-		delay_ms(500);
 		str[1]=sum_X;
 		str[2]=sum_Y;
+		delay_ms(500);
 		BlueTx(str);
 		Send_Flag=0;
 	}
@@ -241,17 +245,17 @@ void test1()
 		time_0=time-last_time;
 	}
 	
-	delta=time_0/10000.0f;
+	delta=time_0/1000000.0f;
 	
 	if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
 	{
-		Target_D_Y_R=Target_D_Y+delta*(motor_a[0]->actual_speed);
-		Y_location_R=Y_location-delta*(motor_a[0]->actual_speed);
+		Target_D_Y_R=Target_D_Y+delta*100*(motor_a[0]->actual_speed);
+		Y_location_R=Y_location-delta*100*(motor_a[0]->actual_speed);
 	}
 	else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
 	{
-		Target_D_X_R=Target_D_X-delta*(motor_a[0]->actual_speed);
-		X_location_R=X_location+delta*(motor_a[0]->actual_speed);
+		Target_D_X_R=Target_D_X-delta*100*(motor_a[0]->actual_speed);
+		X_location_R=X_location+delta*100*(motor_a[0]->actual_speed);
 	}
 	else if(motor_a[0]->actual_speed==0)
 	{
@@ -261,108 +265,108 @@ void test1()
 	
 	//*************************卡尔曼滤波******************************//
 	
-	if(delta<=1.5)
-	{
-		if(fabs(Target_D_Y_R)>3)
+//	if(delta<=1.5)
+//	{
+		if(fabs(Target_D_Y_R)>9)
 		{
-			if(Target_D_Y_R>25) //后
+			if(Target_D_Y_R>30) //后
 			{
-				motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=-0.65-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-0.65-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-0.65+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_Y_R<=25)&&(Target_D_Y_R>3)) 
+			else if((Target_D_Y_R<=30)&&(Target_D_Y_R>9)) 
 			{
-				motor_a[0]->target_speed=-0.15-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=-0.15-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=-0.15+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=-0.15+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=-0.22-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-0.22-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-0.22+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-0.22+motor_a[3]->angel_speed;
 			}
 			
-			else if(Target_D_Y_R<=-25) //前
+			else if(Target_D_Y_R<=-30) //前
 			{
-				motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=0.65-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=0.65-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=0.65+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_Y_R<=-3)&&(Target_D_Y_R>-25)) 
+			else if((Target_D_Y_R<=-9)&&(Target_D_Y_R>-30)) 
 			{
-				motor_a[0]->target_speed=0.15-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=0.15-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=0.15+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=0.15+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=0.22-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=0.22-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=0.22+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=0.22+motor_a[3]->angel_speed;
 			}
 		}
 		else
 		{
-			if(Target_D_X_R>25)  //右
+			if(Target_D_X_R>30)  //右
 			{
-				motor_a[0]->target_speed=0.4-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=-0.4-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=0.4+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=-0.4+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=0.65-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-0.65-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=0.65+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_X_R<=25)&&(Target_D_X_R>3))  
+			else if((Target_D_X_R<=30)&&(Target_D_X_R>9))  
 			{
-				motor_a[0]->target_speed=0.15-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=-0.15-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=0.15+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=-0.15+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=0.22-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-0.22-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=0.22+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-0.22+motor_a[3]->angel_speed;
 			}
-			else if(Target_D_X_R<=-25)  //左
+			else if(Target_D_X_R<=-30)  //左
 			{
-				motor_a[0]->target_speed=-0.4-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=0.4-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=-0.4+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=0.4+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=-0.65-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=0.65-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-0.65+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_X_R<=-3)&&(Target_D_X_R>-25))  
+			else if((Target_D_X_R<=-9)&&(Target_D_X_R>-30))  
 			{
-				motor_a[0]->target_speed=-0.15-motor_a[0]->angel_speed;
-				motor_a[1]->target_speed=0.15-motor_a[1]->angel_speed;
-				motor_a[2]->target_speed=-0.15+motor_a[2]->angel_speed;
-				motor_a[3]->target_speed=0.15+motor_a[3]->angel_speed;
+				motor_a[0]->target_speed=-0.22-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=0.22-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-0.22+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=0.22+motor_a[3]->angel_speed;
 			}
 		}
-	}
+//	}
 	
 	//***********************速度控制******************************//
 	
-	else if(delta>=1.5)
-	{
-		if((X_location_R<15))
-		{
-			motor_a[0]->target_speed=0.4;
-			motor_a[1]->target_speed=-0.4;
-			motor_a[2]->target_speed=0.4;
-			motor_a[3]->target_speed=-0.4;
-		}
-		else if((X_location_R>385))
-		{
-			motor_a[0]->target_speed=-0.4;
-			motor_a[1]->target_speed=0.4;
-			motor_a[2]->target_speed=-0.4;
-			motor_a[3]->target_speed=0.4;
-		}
-		else if((Y_location_R<15))
-		{
-			motor_a[0]->target_speed=-0.4;
-			motor_a[1]->target_speed=-0.4;
-			motor_a[2]->target_speed=-0.4;
-			motor_a[3]->target_speed=-0.4;			
-		}
-		else if((Y_location_R>385))
-		{
-			motor_a[0]->target_speed=0.4;
-			motor_a[1]->target_speed=0.4;
-			motor_a[2]->target_speed=0.4;
-			motor_a[3]->target_speed=0.4;				
-		}
-	}
+//	if(delta>=1.5)
+//	{
+//		if((X_location_R<15))
+//		{
+//			motor_a[0]->target_speed=0.4;
+//			motor_a[1]->target_speed=-0.4;
+//			motor_a[2]->target_speed=0.4;
+//			motor_a[3]->target_speed=-0.4;
+//		}
+//		else if((X_location_R>385))
+//		{
+//			motor_a[0]->target_speed=-0.4;
+//			motor_a[1]->target_speed=0.4;
+//			motor_a[2]->target_speed=-0.4;
+//			motor_a[3]->target_speed=0.4;
+//		}
+//		else if((Y_location_R<15))
+//		{
+//			motor_a[0]->target_speed=-0.4;
+//			motor_a[1]->target_speed=-0.4;
+//			motor_a[2]->target_speed=-0.4;
+//			motor_a[3]->target_speed=-0.4;			
+//		}
+//		else if((Y_location_R>385))
+//		{
+//			motor_a[0]->target_speed=0.4;
+//			motor_a[1]->target_speed=0.4;
+//			motor_a[2]->target_speed=0.4;
+//			motor_a[3]->target_speed=0.4;				
+//		}
+//	}
 //
-	if((fabs(Target_D_X_R)<=3)&&(fabs(Target_D_Y_R)<=3))
+	if((fabs(Target_D_X_R)<=9)&&(fabs(Target_D_Y_R)<=9))
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);

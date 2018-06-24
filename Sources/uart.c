@@ -216,7 +216,7 @@ void LINFlex_RX(void)
 		Y_location=(int)(data[1]<<8|data[2]);     //Êµ¼Ê»»Ëã
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<=3)&&(fabs(Target_D_Y)<=3)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=9)&&(fabs(Target_D_Y)<=9)&&(step<Step_Count))
 		{
 //			SIU.GPDO[45].B.PDO=!(step%2);
 //			delay_ms(1000);
