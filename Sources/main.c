@@ -38,6 +38,7 @@ float omiga;
 int straight_flag=0;
 extern C_flag;
 extern uint32_t time,last_time;
+static uint32_t start_time,stop_time;
 uint32_t time_0;
 float delta;
 float Target_D_X_R=10,Target_D_Y_R=10;
@@ -49,6 +50,8 @@ extern int die_flag;
 extern int elec_flag;
 extern int direction;
 extern int exit_flag;
+extern int mode;
+static float rotating_duty;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
@@ -88,6 +91,7 @@ int main(void)
 //	str[1]=0x55;
 //	str[2]=0x44;
 	str[3]=0xff;
+	start_time=STM.CNT.R/1000;
 	while(1)
 	{
 		if((elec_flag==1))
@@ -98,12 +102,52 @@ int main(void)
 			motor_output(motor_a[3],0);
 			PIT__stop(PIT_Timer1);
 			LINFLEX_0.UARTCR.B.RXEN = 0;
-			SIU.GPDO[71].B.PDO=(step%2);
-			delay_ms(500);
-			SIU.GPDO[45].B.PDO=!(step%2);
-			delay_ms(500);
-			SIU.GPDO[71].B.PDO=1;
-			delay_ms(200);
+			
+			if(mode==WALL)
+			{
+				delay_ms(1200);
+				if(destination[0][2]==destination[0][1])
+				{
+					stop_time=STM.CNT.R/1000;
+					if(destination[0][0]-225<=0)
+					{
+						rotating_duty=-0.5;
+					}
+					else
+					{
+						rotating_duty=0.5;
+					}
+					motor_output(motor_a[0],rotating_duty);
+					motor_output(motor_a[1],rotating_duty);
+					motor_output(motor_a[2],-rotating_duty);
+					motor_output(motor_a[3],-rotating_duty);
+					delay_ms(3000);
+					//此处还应有电磁铁操作
+					motor_output(motor_a[0],-rotating_duty);
+					motor_output(motor_a[1],-rotating_duty);
+					motor_output(motor_a[2],rotating_duty);
+					motor_output(motor_a[3],rotating_duty);
+					delay_ms(3000);
+				}
+				
+				else
+				{
+					; //此处应有电磁铁操作
+				}
+			}
+			
+			if(mode==CHESS)
+			{
+				SIU.GPDO[71].B.PDO=(step%2);
+				delay_ms(500);
+				SIU.GPDO[45].B.PDO=!(step%2);
+				delay_ms(500);
+				SIU.GPDO[71].B.PDO=1;
+				delay_ms(200);
+				elec_flag=0;
+				PIT__restart(PIT_Timer1);
+				LINFLEX_0.UARTCR.B.RXEN = 1;
+			}
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
 			LINFLEX_0.UARTCR.B.RXEN = 1;
@@ -184,6 +228,7 @@ void test1()
 	{
 		step++;
 		stop_flag=0;
+		elec_flag=1;
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
 		motor_output(motor_a[2],0);
@@ -443,10 +488,10 @@ void test()
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[3]->motor_pid,0.64f,1.25f,0,10,10,70,10);
-		motor_a[0]->target_speed=0.4;
-		motor_a[1]->target_speed=0.4;
-		motor_a[2]->target_speed=0.4;
-		motor_a[3]->target_speed=0.4;
+	motor_a[0]->target_speed=-0.4;
+	motor_a[1]->target_speed=-0.4;
+	motor_a[2]->target_speed=0.4;
+	motor_a[3]->target_speed=0.4;
 	Target_D=1.0f;
 	Speed__bekommen(&ecd[0]);
 	if(Dir__bekommen(&ecd[0])) ecd[0]._speed=-(ecd[0]._speed);
@@ -473,10 +518,23 @@ void test()
 	if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
 	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
 	PIT__clear_flag(PIT_Timer1);
-	duty_temp_1=0.4;
-	motor_output(motor_a[0],motor_a[0]->duty);
-	motor_output(motor_a[1],motor_a[1]->duty);
-	motor_output(motor_a[2],motor_a[2]->duty);
-	motor_output(motor_a[3],motor_a[3]->duty);
+	
+	stop_time=STM.CNT.R/1000;
+	
+	if(stop_time-start_time<=3000)
+	{
+		motor_output(motor_a[0],motor_a[0]->duty);
+		motor_output(motor_a[1],motor_a[1]->duty);
+		motor_output(motor_a[2],motor_a[2]->duty);
+		motor_output(motor_a[3],motor_a[3]->duty);
+	}
+	else
+	{
+		motor_output(motor_a[0],0);
+		motor_output(motor_a[1],0);
+		motor_output(motor_a[2],0);
+		motor_output(motor_a[3],0);
+	}
+	
 	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 }

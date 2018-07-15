@@ -21,10 +21,9 @@ uint8_t FLAG;
 uint8_t lane_flag,Start_line_flag;//赛道标志,用于设置目标车速
 float   pram[4];
 uint8_t Lampe_test;
-extern int ccd_threshold;
 extern uint8_t Reverse_finish;
 uint8_t Elec_flag;
-float destination[2][50];
+float destination[2][10];
 uint8_t Start_Flag=0,Send_Flag=0;
 int Step_Count=0,Step_Count_R,step=0;
 float Target_D_X,Target_D_Y;
@@ -42,6 +41,8 @@ int die_flag;
 int elec_flag;
 int direction;
 int exit_flag;
+int mode;
+
 
 void LINFlex_TX(unsigned char data)
 {
@@ -159,7 +160,14 @@ void LINFlex_RX(void)
 		sum_X+=points[2];
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		destination[0][Step_Count]=(points[2]-1)*50+25; 
+		if(mode==CHESS)
+		{
+			destination[0][Step_Count]=(points[2]-1)*50+25; 
+		}
+		else if(mode==WALL)
+		{
+			destination[0][Step_Count]=((points[2]-1)*50+25)/2; 
+		}
 //		sum_X+=destination[0][Step_Count];
 	break;
 	case 'Y': 
@@ -167,13 +175,45 @@ void LINFlex_RX(void)
 		points[5]=data[1]*256+data[2];    //实际换算
 		sum_Y+=points[5];
 //		sum_temp+=points[5];
-		destination[1][Step_Count]=(points[5]-1)*50+25; 
+		if(mode==CHESS)
+		{
+			destination[1][Step_Count]=(points[5]-1)*50+25; 
+		}
+		else if(mode==WALL)
+		{
+			destination[1][Step_Count]=((points[5]-1)*50+25)/2; 
+		}
 //		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
-		if(Step_Count==Step_Count_R)
+		if((mode==CHESS)&&(Step_Count==Step_Count_R))
 		{
 			Start_Flag=1;
 			Send_Flag=1;
+		}
+		if((mode==WALL)&&(Step_Count==2))
+		{
+			if(destination[1][0]==destination[1][1])
+			{
+				destination[1][0]=destination[1][0]+25;
+				destination[0][0]=(destination[0][0]+destination[0][1])/2;
+			}
+			else if(destination[0][0]==destination[0][1])
+			{
+				destination[1][0]=(destination[1][0]+destination[1][1])/2;
+				if(destination[0][0]-225<=0)
+				{
+					destination[0][2]=destination[0][0];
+					destination[0][0]=destination[0][0]-25;
+				}
+				else
+				{
+					destination[0][2]=destination[0][0];
+					destination[0][0]=destination[0][0]+25;
+				}
+			}
+			Start_Flag=1;
+			Send_Flag=1;
+			Step_Count=1;
 		}
 	break;
 	case 'N': //是否执行吸棋子操作的标志位
@@ -181,7 +221,11 @@ void LINFlex_RX(void)
 //		pram[0]=pramdata[2];    //调试换算
 		pram[0]=data[1]*256+data[2];    //实际换算
 		Step_Count_R=pram[0];
+		mode=CHESS;
 	break;
+	case 'W':    
+		Step_Count_R=1;
+		mode=WALL;
 	case 'L':
 		direction=LEFT;
 	break;
@@ -224,7 +268,7 @@ void LINFlex_RX(void)
 //			delay_ms(1000);
 //			SIU.GPDO[71].B.PDO=(step%2);
 			stop_flag=1;
-			elec_flag=1;
+//			elec_flag=1;
 		}
 //		time_before_last_time=last_time;
 		last_time=STM.CNT.R;
