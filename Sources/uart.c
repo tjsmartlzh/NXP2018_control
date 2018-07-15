@@ -203,12 +203,12 @@ void LINFlex_RX(void)
 				if(destination[0][0]-375<=0)
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]+25;
+					destination[0][0]=destination[0][0]+25+5;
 				}
 				else
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]-25;
+					destination[0][0]=destination[0][0]-25-5;
 				}
 			}
 			Start_Flag=1;
