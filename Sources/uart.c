@@ -166,7 +166,7 @@ void LINFlex_RX(void)
 		}
 		else if(mode==WALL)
 		{
-			destination[0][Step_Count]=((points[2]-1)*50+25)/2; 
+			destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
 		}
 //		sum_X+=destination[0][Step_Count];
 	break;
@@ -181,7 +181,7 @@ void LINFlex_RX(void)
 		}
 		else if(mode==WALL)
 		{
-			destination[1][Step_Count]=((points[5]-1)*50+25)/2; 
+			destination[1][Step_Count]=((float)points[5]/2-1)*50+25; 
 		}
 //		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
@@ -194,21 +194,21 @@ void LINFlex_RX(void)
 		{
 			if(destination[1][0]==destination[1][1])
 			{
-				destination[1][0]=destination[1][0]+25;
+				destination[1][0]=destination[1][0]+25+4;
 				destination[0][0]=(destination[0][0]+destination[0][1])/2;
 			}
 			else if(destination[0][0]==destination[0][1])
 			{
-				destination[1][0]=(destination[1][0]+destination[1][1])/2;
-				if(destination[0][0]-225<=0)
+				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
+				if(destination[0][0]-375<=0)
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]-25;
+					destination[0][0]=destination[0][0]+25;
 				}
 				else
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]+25;
+					destination[0][0]=destination[0][0]-25;
 				}
 			}
 			Start_Flag=1;

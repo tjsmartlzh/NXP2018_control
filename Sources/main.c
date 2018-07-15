@@ -109,25 +109,30 @@ int main(void)
 				if(destination[0][2]==destination[0][1])
 				{
 					stop_time=STM.CNT.R/1000;
-					if(destination[0][0]-225<=0)
+					if(destination[0][0]-375<=0)
 					{
 						rotating_duty=-0.5;
 					}
 					else
 					{
-						rotating_duty=0.5;
+						rotating_duty=+0.5;
 					}
 					motor_output(motor_a[0],rotating_duty);
 					motor_output(motor_a[1],rotating_duty);
 					motor_output(motor_a[2],-rotating_duty);
 					motor_output(motor_a[3],-rotating_duty);
-					delay_ms(3000);
+					delay_ms(1150);
+					motor_output(motor_a[0],0);
+					motor_output(motor_a[1],0);
+					motor_output(motor_a[2],0);
+					motor_output(motor_a[3],0);
+					delay_ms(1150);
 					//此处还应有电磁铁操作
 					motor_output(motor_a[0],-rotating_duty);
 					motor_output(motor_a[1],-rotating_duty);
 					motor_output(motor_a[2],rotating_duty);
 					motor_output(motor_a[3],rotating_duty);
-					delay_ms(3000);
+					delay_ms(1000);
 				}
 				
 				else
@@ -206,7 +211,7 @@ void Mode0_Quick(void)
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(destination[0][step]*1000+destination[1][step]);
+	OLED_Float(destination[0][0]);
 }
 
 void test1()
@@ -431,7 +436,7 @@ void test1()
 
 	//****************************防出界控制**********************************//
 	
-	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段
+	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段    0.16p 1.00i
 	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
 	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
