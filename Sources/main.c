@@ -85,6 +85,8 @@ int main(void)
 	GPIO__output__enable(12);
 	GPIO__output__enable(71);  //E7  推拉机构
 	GPIO__output__enable(45);  //C13 电磁铁
+	GPIO__output__enable(44);  //C12右前方电磁铁
+	GPIO__output__enable(40);  //C8左前方电磁铁
 	SIU.GPDO[45].B.PDO=0;
 	SIU.GPDO[71].B.PDO=1;
 	PIT__config(PIT_Timer1,10,64,test1,10);
@@ -136,8 +138,13 @@ int main(void)
 					motor_output(motor_a[1],0);
 					motor_output(motor_a[2],0);
 					motor_output(motor_a[3],0);
-					delay_ms(1150);
-					//此处还应有电磁铁操作
+					
+					SIU.GPDO[44].B.PDO=!(step%2);//此处还应有电磁铁操作
+					SIU.GPDO[40].B.PDO=!(step%2);
+					delay_ms(1000);
+//					SIU.GPDO[44].B.PDO=!(step%2);
+//					SIU.GPDO[40].B.PDO=!(step%2);
+					
 					motor_output(motor_a[0],-rotating_duty);
 					motor_output(motor_a[1],-rotating_duty);
 					motor_output(motor_a[2],rotating_duty);
@@ -147,15 +154,19 @@ int main(void)
 				
 				else
 				{
-					; //此处应有电磁铁操作
+					SIU.GPDO[44].B.PDO=!(step)%2;//此处还应有电磁铁操作
+					SIU.GPDO[40].B.PDO=!(step)%2;
+					delay_ms(1000);
+//					SIU.GPDO[44].B.PDO=!(step%2);
+//					SIU.GPDO[40].B.PDO=!(step%2);
 				}
 			}
 			
 			if(mode==CHESS)
 			{
-				SIU.GPDO[71].B.PDO=(step%2);
+				SIU.GPDO[71].B.PDO=!(step%2);
 				delay_ms(500);
-				SIU.GPDO[45].B.PDO=!(step%2);
+				SIU.GPDO[45].B.PDO=step%2;
 				delay_ms(500);
 				SIU.GPDO[71].B.PDO=1;
 				delay_ms(200);
@@ -368,7 +379,7 @@ void test1()
 				motor_a[2]->target_speed=0.65+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=-0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_X_R<=30)&&(Target_D_X_R>9))  
+			else if((Target_D_X_R<=30)&&(Target_D_X_R>6))  
 			{
 				motor_a[0]->target_speed=0.22-motor_a[0]->angel_speed;
 				motor_a[1]->target_speed=-0.22-motor_a[1]->angel_speed;
@@ -382,7 +393,7 @@ void test1()
 				motor_a[2]->target_speed=-0.65+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_X_R<=-9)&&(Target_D_X_R>-30))  
+			else if((Target_D_X_R<=-6)&&(Target_D_X_R>-30))  
 			{
 				motor_a[0]->target_speed=-0.22-motor_a[0]->angel_speed;
 				motor_a[1]->target_speed=0.22-motor_a[1]->angel_speed;
@@ -426,7 +437,7 @@ void test1()
 //		}
 //	}
 //
-	if((fabs(Target_D_X_R)<=9)&&(fabs(Target_D_Y_R)<=9))
+	if((fabs(Target_D_X_R)<=6)&&(fabs(Target_D_Y_R)<=9))
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
@@ -446,10 +457,10 @@ void test1()
 
 	//****************************防出界控制**********************************//
 	
-	PID__config(&motor_a[0]->motor_pid,0.16f,1.00f,0,10,10,70,10); //需要对PID分段    0.16p 1.00i
-	PID__config(&motor_a[1]->motor_pid,0.16f,1.00f,0,10,10,70,10);
-	PID__config(&motor_a[2]->motor_pid,0.16f,1.00f,0,10,10,70,10);
-	PID__config(&motor_a[3]->motor_pid,0.16f,1.00f,0,10,10,70,10);
+	PID__config(&motor_a[0]->motor_pid,0.52f,1.25f,0,10,10,70,10); //需要对PID分段    0.16p 1.00i
+	PID__config(&motor_a[1]->motor_pid,0.52f,1.25f,0,10,10,70,10);
+	PID__config(&motor_a[2]->motor_pid,0.52f,1.25f,0,10,10,70,10);
+	PID__config(&motor_a[3]->motor_pid,0.52f,1.25f,0,10,10,70,10);
 	
 	//*****************************PID配置************************************//
 	
@@ -497,19 +508,22 @@ void test()
 	int duty_temp=0;
 	float duty_temp_1;
 	int i=0;
+	float rotating_time;
 //	char str[3];
 	Mode0_Quick();
 	PID__config(&motor_a[0]->motor_pid,0.64f,1.25f,0,10,10,70,10); //1.44p 50i
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[3]->motor_pid,0.64f,1.25f,0,10,10,70,10);
-	if(destination[0][0]-375<=0)
+	if(destination[0][2]-325<=0)
 	{
 		rotating_duty=-0.4;
+		rotating_time=2650;
 	}
 	else
 	{
 		rotating_duty=0.4;
+		rotating_time=2800;
 	}
 	motor_a[0]->target_speed=rotating_duty;
 	motor_a[1]->target_speed=rotating_duty;
@@ -543,7 +557,7 @@ void test()
 	
 	stop_time=STM.CNT.R/1000;
 	
-	if(stop_time-start_time<=2800)
+	if(stop_time-start_time<=rotating_time)
 	{
 		motor_output(motor_a[0],motor_a[0]->duty);
 		motor_output(motor_a[1],motor_a[1]->duty);

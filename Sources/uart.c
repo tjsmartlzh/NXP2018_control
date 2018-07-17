@@ -200,15 +200,16 @@ void LINFlex_RX(void)
 			else if(destination[0][0]==destination[0][1])
 			{
 				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
-				if(destination[0][0]-375<=0)
+				
+				if(destination[0][0]-325<=0)
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]+25+5;
+					destination[0][0]=destination[0][0]+25;
 				}
 				else
 				{
 					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]-25-5;
+					destination[0][0]=destination[0][0]-25;
 				}
 			}
 			Start_Flag=1;
@@ -260,7 +261,7 @@ void LINFlex_RX(void)
 		Y_location=(int)(data[1]<<8|data[2]);     //Êµ¼Ê»»Ëã
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<=9)&&(fabs(Target_D_Y)<=9)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=6)&&(fabs(Target_D_Y)<=9)&&(step<Step_Count))
 		{
 //			SIU.GPDO[45].B.PDO=!(step%2);
 //			delay_ms(1000);
