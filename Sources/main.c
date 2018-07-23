@@ -53,6 +53,7 @@ extern int exit_flag;
 extern int mode;
 static float rotating_duty;
 static int finish_flag=0;
+extern int enter_direction,temp;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
@@ -89,7 +90,7 @@ int main(void)
 	GPIO__output__enable(40);  //C8左前方电磁铁
 	SIU.GPDO[45].B.PDO=0;
 	SIU.GPDO[71].B.PDO=1;
-	PIT__config(PIT_Timer1,10,64,test1,10);
+	PIT__config(PIT_Timer1,10,64,test2,10);
 	str[0]=0x66;
 //	str[1]=0x55;
 //	str[2]=0x44;
@@ -108,58 +109,55 @@ int main(void)
 			
 			if(mode==WALL)
 			{
-				delay_ms(1200);
-				if(destination[0][2]==destination[0][1])
-				{
-					PIT__config(PIT_Timer2,10,64,test,8);
-					start_time=STM.CNT.R/1000;
-//					if(destination[0][0]-375<=0)
+				delay_ms(600);
+//				if(destination[0][2]==destination[0][1])
+//				{
+//					PIT__config(PIT_Timer2,10,64,test,8);
+//					start_time=STM.CNT.R/1000;
+////					if(destination[0][0]-375<=0)
+////					{
+////						rotating_duty=-0.5;
+////					}
+////					else
+////					{
+////						rotating_duty=+0.5;
+////					}
+//					while(1)
 //					{
-//						rotating_duty=-0.5;
+//						if(finish_flag)
+//						{
+//							PIT__stop(PIT_Timer2);
+//							break;
+//						}
 //					}
-//					else
-//					{
-//						rotating_duty=+0.5;
-//					}
-					while(1)
-					{
-						if(finish_flag)
-						{
-							PIT__stop(PIT_Timer2);
-							break;
-						}
-					}
-//					motor_output(motor_a[0],rotating_duty);
-//					motor_output(motor_a[1],rotating_duty);
-//					motor_output(motor_a[2],-rotating_duty);
-//					motor_output(motor_a[3],-rotating_duty);
-//					delay_ms(1150);
-					motor_output(motor_a[0],0);
-					motor_output(motor_a[1],0);
-					motor_output(motor_a[2],0);
-					motor_output(motor_a[3],0);
-					
-					SIU.GPDO[44].B.PDO=!(step%2);//此处还应有电磁铁操作
-					SIU.GPDO[40].B.PDO=!(step%2);
-					delay_ms(1000);
-//					SIU.GPDO[44].B.PDO=!(step%2);
+////					motor_output(motor_a[0],rotating_duty);
+////					motor_output(motor_a[1],rotating_duty);
+////					motor_output(motor_a[2],-rotating_duty);
+////					motor_output(motor_a[3],-rotating_duty);
+////					delay_ms(1150);
+//					motor_output(motor_a[0],0);
+//					motor_output(motor_a[1],0);
+//					motor_output(motor_a[2],0);
+//					motor_output(motor_a[3],0);
+//					
+//					SIU.GPDO[44].B.PDO=!(step%2);//此处还应有电磁铁操作
 //					SIU.GPDO[40].B.PDO=!(step%2);
-					
-					motor_output(motor_a[0],-rotating_duty);
-					motor_output(motor_a[1],-rotating_duty);
-					motor_output(motor_a[2],rotating_duty);
-					motor_output(motor_a[3],rotating_duty);
-					delay_ms(1000);
-				}
-				
-				else
-				{
-					SIU.GPDO[44].B.PDO=!(step)%2;//此处还应有电磁铁操作
-					SIU.GPDO[40].B.PDO=!(step)%2;
-					delay_ms(1000);
-//					SIU.GPDO[44].B.PDO=!(step%2);
-//					SIU.GPDO[40].B.PDO=!(step%2);
-				}
+//					delay_ms(1000);
+////					SIU.GPDO[44].B.PDO=!(step%2);
+////					SIU.GPDO[40].B.PDO=!(step%2);
+//					
+//					motor_output(motor_a[0],-rotating_duty);
+//					motor_output(motor_a[1],-rotating_duty);
+//					motor_output(motor_a[2],rotating_duty);
+//					motor_output(motor_a[3],rotating_duty);
+//					delay_ms(1500);
+//				}
+//				
+				SIU.GPDO[44].B.PDO=!(step)%2;//此处还应有电磁铁操作
+				SIU.GPDO[40].B.PDO=!(step)%2;
+				delay_ms(1000);
+//				SIU.GPDO[44].B.PDO=!(step%2);
+//				SIU.GPDO[40].B.PDO=!(step%2);
 			}
 			
 			if(mode==CHESS)
@@ -232,7 +230,7 @@ void Mode0_Quick(void)
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(stop_time-start_time);
+	OLED_Float(Y_location);
 }
 
 void test1()
@@ -338,7 +336,7 @@ void test1()
 	
 //	if(delta<=1.5)
 //	{
-		if(fabs(Target_D_Y_R)>9)
+		if(fabs(Target_D_Y_R)>7)
 		{
 			if(Target_D_Y_R>30) //后
 			{
@@ -347,7 +345,7 @@ void test1()
 				motor_a[2]->target_speed=-0.65+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=-0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_Y_R<=30)&&(Target_D_Y_R>9)) 
+			else if((Target_D_Y_R<=30)&&(Target_D_Y_R>7)) 
 			{
 				motor_a[0]->target_speed=-0.22-motor_a[0]->angel_speed;
 				motor_a[1]->target_speed=-0.22-motor_a[1]->angel_speed;
@@ -362,7 +360,7 @@ void test1()
 				motor_a[2]->target_speed=0.65+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=0.65+motor_a[3]->angel_speed;
 			}
-			else if((Target_D_Y_R<=-9)&&(Target_D_Y_R>-30)) 
+			else if((Target_D_Y_R<=-7)&&(Target_D_Y_R>-30)) 
 			{
 				motor_a[0]->target_speed=0.22-motor_a[0]->angel_speed;
 				motor_a[1]->target_speed=0.22-motor_a[1]->angel_speed;
@@ -437,7 +435,7 @@ void test1()
 //		}
 //	}
 //
-	if((fabs(Target_D_X_R)<=6)&&(fabs(Target_D_Y_R)<=9))
+	if((fabs(Target_D_X_R)<=6)&&(fabs(Target_D_Y_R)<=7))
 	{
 		motor_output(motor_a[0],0);
 		motor_output(motor_a[1],0);
@@ -515,16 +513,17 @@ void test()
 	PID__config(&motor_a[1]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.64f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[3]->motor_pid,0.64f,1.25f,0,10,10,70,10);
-	if(destination[0][2]-325<=0)
+	if(destination[0][2]-X_location<=0)
 	{
 		rotating_duty=-0.4;
-		rotating_time=2650;
+		rotating_time=2800;
 	}
 	else
 	{
 		rotating_duty=0.4;
 		rotating_time=2800;
 	}
+	
 	motor_a[0]->target_speed=rotating_duty;
 	motor_a[1]->target_speed=rotating_duty;
 	motor_a[2]->target_speed=-rotating_duty;
@@ -583,4 +582,14 @@ void test()
 	}
 	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 	PIT__clear_flag(PIT_Timer2);
+}
+
+void test2()
+{
+	float duty=0.5;
+	motor_output(motor_a[0],duty);
+	motor_output(motor_a[1],-duty);
+	motor_output(motor_a[2],duty);
+	motor_output(motor_a[3],-duty);
+	PIT__clear_flag(PIT_Timer1);
 }

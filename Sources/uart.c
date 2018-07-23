@@ -42,6 +42,8 @@ int elec_flag;
 int direction;
 int exit_flag;
 int mode;
+int enter_direction=0;
+int temp;
 
 
 void LINFlex_TX(unsigned char data)
@@ -155,6 +157,7 @@ void LINFlex_RX(void)
 	switch (temp)
 	{
 	case 'X':
+		temp=data[0];
 //		points[2]=data[2]-'0';    //µ˜ ‘ªªÀ„
 		points[2]=data[1]*256+data[2];    // µº ªªÀ„
 		sum_X+=points[2];
@@ -166,7 +169,21 @@ void LINFlex_RX(void)
 		}
 		else if(mode==WALL)
 		{
-			destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
+			if(data[0]=='a')
+			{
+				enter_direction=LEFT;
+				destination[1][Step_Count]=((float)points[2]/2-1)*50+25+3;
+			}
+			else if(data[0]=='d')
+			{
+				enter_direction=RIGHT;
+				destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25-3;
+			}
+			else
+			{
+				destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
+		
+			}
 		}
 //		sum_X+=destination[0][Step_Count];
 	break;
@@ -181,7 +198,18 @@ void LINFlex_RX(void)
 		}
 		else if(mode==WALL)
 		{
-			destination[1][Step_Count]=((float)points[5]/2-1)*50+25; 
+			if(enter_direction==LEFT)
+			{
+				destination[0][Step_Count]=400-((float)points[5]/2-1)*50-25; 
+			}
+			else if(enter_direction==RIGHT)
+			{
+				destination[0][Step_Count]=((float)points[5]/2-1)*50+25; 
+			}
+			else
+			{
+				destination[1][Step_Count]=((float)points[5]/2-1)*50+25; 
+			}
 		}
 //		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
@@ -192,26 +220,23 @@ void LINFlex_RX(void)
 		}
 		if((mode==WALL)&&(Step_Count==2))
 		{
-			if(destination[1][0]==destination[1][1])
-			{
-				destination[1][0]=destination[1][0]+25+4;
-				destination[0][0]=(destination[0][0]+destination[0][1])/2;
-			}
-			else if(destination[0][0]==destination[0][1])
-			{
-				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
-				
-				if(destination[0][0]-325<=0)
-				{
-					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]+25;
-				}
-				else
-				{
-					destination[0][2]=destination[0][0];
-					destination[0][0]=destination[0][0]-25;
-				}
-			}
+			destination[1][0]=destination[1][0]+25+4;
+			destination[0][0]=(destination[0][0]+destination[0][1])/2;
+//			else if(destination[0][0]==destination[0][1])
+//			{
+//				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
+//				
+//				if(destination[0][0]-400<=0)
+//				{
+//					destination[0][2]=destination[0][0];
+//					destination[0][0]=destination[0][0]+25;
+//				}
+//				else
+//				{
+//					destination[0][2]=destination[0][0];
+//					destination[0][0]=destination[0][0]-25;
+//				}
+//			}
 			Start_Flag=1;
 			Send_Flag=1;
 			Step_Count=1;
@@ -244,7 +269,18 @@ void LINFlex_RX(void)
 //		points[1]=data[1]-'0';    //µ˜ ‘ªªÀ„
 //		points[2]=data[2]-'0';    //µ˜ ‘ªªÀ„
 //		X_location=points[0]*100+points[1]*10+points[2];    //µ˜ ‘ªªÀ„
-		X_location=(int)(data[1]<<8|data[2]);    // µº ªªÀ„
+		if(enter_direction==LEFT)
+		{
+			Y_location=(int)(data[1]<<8|data[2]);    // µº ªªÀ„
+		}
+		else if(enter_direction==RIGHT)
+		{
+			Y_location=400-(int16_t)(data[1]<<8|data[2]);
+		}
+		else
+		{
+			X_location=(int)(data[1]<<8|data[2]);
+		}
 //		X_error=X_last_location-X_location;
 //		X_last_location=X_location;
 //		X_last_error=X_last_last_location-X_last_location;
@@ -258,10 +294,22 @@ void LINFlex_RX(void)
 //		points[4]=data[1]-'0';	  //µ˜ ‘ªªÀ„
 //		points[5]=data[2]-'0';    //µ˜ ‘ªªÀ„
 //		Y_location=points[3]*100+points[4]*10+points[5];   //µ˜ ‘ªªÀ„
-		Y_location=(int)(data[1]<<8|data[2]);     // µº ªªÀ„
+		if((enter_direction==LEFT))
+		{
+			X_location=400-(int)(data[1]<<8|data[2]);     // µº ªªÀ„
+		}
+		else if(enter_direction==RIGHT)
+		{
+			X_location=(int)(data[1]<<8|data[2]); 
+		}
+		else
+		{
+			Y_location=(int)(data[1]<<8|data[2]);
+		}
 		Target_D_Y=destination[1][step]-Y_location;
 
-		if((fabs(Target_D_X)<=6)&&(fabs(Target_D_Y)<=9)&&(step<Step_Count))
+//		Start_Flag=1;
+		if((fabs(Target_D_X)<=6)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
 		{
 //			SIU.GPDO[45].B.PDO=!(step%2);
 //			delay_ms(1000);
@@ -277,7 +325,13 @@ void LINFlex_RX(void)
 //		else delta_uart_time=(last_time-time_before_last_time)/1000000.0f;
 //		if(delta_uart_time>2) die_flag=1;
 	break;
-
+	case 'p':
+		points[2]=data[1]*256+data[2];
+		destination[0][0]=(points[2]-1)*50+25; 
+	break;
+	case 'q':
+		points[5]=data[1]*256+data[2];
+		destination[1][0]=(points[5]-1)*50+25;
 	case 'a': 
 		theta=data[1]*256+data[2];    // µº ªªÀ„
 	break;
