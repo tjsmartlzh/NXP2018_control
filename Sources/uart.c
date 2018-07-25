@@ -159,25 +159,38 @@ void LINFlex_RX(void)
 	case 'X':
 		temp=data[0];
 //		points[2]=data[2]-'0';    //调试换算
-		points[2]=data[1]*256+data[2];    //实际换算
+		points[2]=(int16_t)(data[1]<<8|data[2]);    //实际换算
 		sum_X+=points[2];
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		if(mode==CHESS)
 		{
-			destination[0][Step_Count]=(points[2]-1)*50+25; 
+			if(data[0]=='a')
+			{
+				enter_direction=LEFT;
+				destination[1][Step_Count]=(points[2]-1)*50+25;
+			}
+			else if(data[0]=='d')
+			{
+				enter_direction=RIGHT;
+				destination[1][Step_Count]=400-(points[2]-1)*50-25;
+			}
+			else
+			{
+				destination[0][Step_Count]=(points[2]-1)*50+25; 
+			}
 		}
 		else if(mode==WALL)
 		{
 			if(data[0]=='a')
 			{
 				enter_direction=LEFT;
-				destination[1][Step_Count]=((float)points[2]/2-1)*50+25+3;
+				destination[1][Step_Count]=((float)points[2]/2-1)*50+25+10;
 			}
 			else if(data[0]=='d')
 			{
 				enter_direction=RIGHT;
-				destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25-3;
+				destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25+10;
 			}
 			else
 			{
@@ -189,12 +202,23 @@ void LINFlex_RX(void)
 	break;
 	case 'Y': 
 //		points[5]=data[2]-'0';    //调试换算
-		points[5]=data[1]*256+data[2];    //实际换算
+		points[5]=(int16_t)(data[1]<<8|data[2]);    //实际换算
 		sum_Y+=points[5];
 //		sum_temp+=points[5];
 		if(mode==CHESS)
 		{
-			destination[1][Step_Count]=(points[5]-1)*50+25; 
+			if(enter_direction==LEFT)
+			{
+				destination[0][Step_Count]=400-(points[5]-1)*50-25; 
+			}
+			else if(enter_direction==RIGHT)
+			{
+				destination[0][Step_Count]=(points[5]-1)*50+25; 
+			}
+			else
+			{
+				destination[1][Step_Count]=(points[5]-1)*50+25; 
+			}
 		}
 		else if(mode==WALL)
 		{
@@ -208,7 +232,7 @@ void LINFlex_RX(void)
 			}
 			else
 			{
-				destination[1][Step_Count]=((float)points[5]/2-1)*50+25; 
+				destination[1][Step_Count]=((float)points[5]/2-1)*50+25+6; 
 			}
 		}
 //		sum_Y+=destination[1][Step_Count];
@@ -220,7 +244,7 @@ void LINFlex_RX(void)
 		}
 		if((mode==WALL)&&(Step_Count==2))
 		{
-			destination[1][0]=destination[1][0]+25+4;
+			destination[1][0]=destination[1][0]+25;
 			destination[0][0]=(destination[0][0]+destination[0][1])/2;
 //			else if(destination[0][0]==destination[0][1])
 //			{
@@ -245,7 +269,7 @@ void LINFlex_RX(void)
 	case 'N': //是否执行吸棋子操作的标志位
 //		pramdata[2]=data[2]-'0';    //调试换算
 //		pram[0]=pramdata[2];    //调试换算
-		pram[0]=data[1]*256+data[2];    //实际换算
+		pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
 		Step_Count_R=pram[0];
 		mode=CHESS;
 	break;
@@ -271,7 +295,7 @@ void LINFlex_RX(void)
 //		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
 		if(enter_direction==LEFT)
 		{
-			Y_location=(int)(data[1]<<8|data[2]);    //实际换算
+			Y_location=(int16_t)(data[1]<<8|data[2]);    //实际换算
 		}
 		else if(enter_direction==RIGHT)
 		{
@@ -279,7 +303,7 @@ void LINFlex_RX(void)
 		}
 		else
 		{
-			X_location=(int)(data[1]<<8|data[2]);
+			X_location=(int16_t)(data[1]<<8|data[2]);
 		}
 //		X_error=X_last_location-X_location;
 //		X_last_location=X_location;
@@ -296,20 +320,20 @@ void LINFlex_RX(void)
 //		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
 		if((enter_direction==LEFT))
 		{
-			X_location=400-(int)(data[1]<<8|data[2]);     //实际换算
+			X_location=400-(int16_t)(data[1]<<8|data[2]);     //实际换算
 		}
 		else if(enter_direction==RIGHT)
 		{
-			X_location=(int)(data[1]<<8|data[2]); 
+			X_location=(int16_t)(data[1]<<8|data[2]); 
 		}
 		else
 		{
-			Y_location=(int)(data[1]<<8|data[2]);
+			Y_location=(int16_t)(data[1]<<8|data[2]);
 		}
 		Target_D_Y=destination[1][step]-Y_location;
 
 //		Start_Flag=1;
-		if((fabs(Target_D_X)<=6)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
+		if((fabs(Target_D_X)<=7)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
 		{
 //			SIU.GPDO[45].B.PDO=!(step%2);
 //			delay_ms(1000);
@@ -326,18 +350,59 @@ void LINFlex_RX(void)
 //		if(delta_uart_time>2) die_flag=1;
 	break;
 	case 'p':
-		points[2]=data[1]*256+data[2];
+		points[2]=(int16_t)(data[1]<<8|data[2]);
 		destination[0][0]=(points[2]-1)*50+25; 
 	break;
 	case 'q':
-		points[5]=data[1]*256+data[2];
+		points[5]=(int16_t)(data[1]<<8|data[2]);
 		destination[1][0]=(points[5]-1)*50+25;
 	case 'a': 
-		theta=data[1]*256+data[2];    //实际换算
+		theta=(int16_t)(data[1]<<8|data[2]);    //实际换算
 	break;
 	case 'E':
 		Elec_flag=1;
 	break;
+	case 'c':
+		pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
+		Step_Count_R=pram[0];
+	break;
+	case 'j':
+		GPIO__output__enable(13);
+		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
+		if(data[0]=='a')
+		{
+			enter_direction=LEFT;
+			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+		else if(data[0]=='d')
+		{
+			enter_direction=RIGHT;
+			destination[1][Step_Count]=400-(int16_t)(data[1]<<8|data[2]);
+		}
+		else
+		{
+			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+	break;
+	case 'k':
+		if(data[0]=='a')
+		{
+			destination[0][Step_Count]=400-(int16_t)(data[1]<<8|data[2]); 
+		}
+		else if(data[0]=='d')
+		{
+			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]); 
+		}
+		else
+		{
+			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+		Step_Count++;
+		if(Step_Count==Step_Count_R)
+		{
+			Start_Flag=1;
+			Send_Flag=1;
+		}
 	default:
 		initLINFlex_0_UART(12);
 	break;
