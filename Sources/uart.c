@@ -328,7 +328,7 @@ void LINFlex_RX(void)
 		}
 		else
 		{
-			Y_location=(int16_t)(data[1]<<8|data[2]);
+			Y_location=(int16_t)(data[1]<<8|data[2])-7.5;
 		}
 		Target_D_Y=destination[1][step]-Y_location;
 
@@ -340,7 +340,9 @@ void LINFlex_RX(void)
 //			SIU.GPDO[71].B.PDO=!(step%2);
 //			delay_ms(1000);
 //			SIU.GPDO[71].B.PDO=(step%2);
+			
 			stop_flag=1;
+			
 //			elec_flag=1;
 		}
 //		time_before_last_time=last_time;
