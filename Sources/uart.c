@@ -44,7 +44,8 @@ int exit_flag;
 int mode;
 int enter_direction=0;
 int temp;
-
+int times=0;
+int run_flag;
 
 void LINFlex_TX(unsigned char data)
 {
@@ -70,26 +71,26 @@ void LINFlex_TX(unsigned char data)
 //	  LINFlex_TX(s[j]);
 //}
 
-//char* Int_to_char(int n)
-//{
-//	int i,j,sign;
-//	char temp[10];
-//	char s[10];
-//	if((sign=n)<0)//记录符号
-//		n=-n;//使n成为正数
-//	i=0;
-//	do{
-//		temp[i++]=n%10+'0';//取下一个数字
-//	}
-//	while ((n/=10)>0);//删除该数字
-//	if(sign<0)
-//		temp[i++]='-';
-//	temp[i]='\0';
-//	for(j = 0;j<i;j++)
-//		s[j] = temp[i-j-1];
-//	s[j] = '\0';
-//	return s;
-//}
+char* Int_to_char(int n)
+{
+	int i,j,sign;
+	char temp[10];
+	char s[10];
+	if((sign=n)<0)//记录符号
+		n=-n;//使n成为正数
+	i=0;
+	do{
+		temp[i++]=n%10+'0';//取下一个数字
+	}
+	while ((n/=10)>0);//删除该数字
+	if(sign<0)
+		temp[i++]='-';
+	temp[i]='\0';
+	for(j = 0;j<i;j++)
+		s[j] = temp[i-j-1];
+	s[j] = '\0';
+	return s;
+}
 void f2s(float f, char* str)
 {
 	
@@ -309,7 +310,7 @@ void LINFlex_RX(void)
 //		X_last_location=X_location;
 //		X_last_error=X_last_last_location-X_last_location;
 //		X_last_last_location=X_last_location;
-		Target_D_X=destination[0][step]-X_location;
+//		Target_D_X=destination[0][step]-X_location;
 //		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
 //		
 	break;
@@ -318,6 +319,11 @@ void LINFlex_RX(void)
 //		points[4]=data[1]-'0';	  //调试换算
 //		points[5]=data[2]-'0';    //调试换算
 //		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
+		times++;
+		if(times) 
+		{
+			run_flag=1;
+		}
 		if((enter_direction==LEFT))
 		{
 			X_location=400-(int16_t)(data[1]<<8|data[2]);     //实际换算
@@ -330,21 +336,21 @@ void LINFlex_RX(void)
 		{
 			Y_location=(int16_t)(data[1]<<8|data[2])-7.5;
 		}
-		Target_D_Y=destination[1][step]-Y_location;
+//		Target_D_Y=destination[1][step]-Y_location;
 
 //		Start_Flag=1;
-		if((fabs(Target_D_X)<=7)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
-		{
-//			SIU.GPDO[45].B.PDO=!(step%2);
-//			delay_ms(1000);
-//			SIU.GPDO[71].B.PDO=!(step%2);
-//			delay_ms(1000);
-//			SIU.GPDO[71].B.PDO=(step%2);
-			
-			stop_flag=1;
-			
-//			elec_flag=1;
-		}
+//		if((fabs(Target_D_X)<=7)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
+//		{
+////			SIU.GPDO[45].B.PDO=!(step%2);
+////			delay_ms(1000);
+////			SIU.GPDO[71].B.PDO=!(step%2);
+////			delay_ms(1000);
+////			SIU.GPDO[71].B.PDO=(step%2);
+//			
+//			stop_flag=1;
+//			
+////			elec_flag=1;
+//		}
 //		time_before_last_time=last_time;
 		last_time=STM.CNT.R;
 //		if(last_time<time_before_last_time) delta_uart_time=(last_time-time_before_last_time+0xffffffff)/1000000.0f;
