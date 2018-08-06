@@ -203,7 +203,7 @@ void OLED_Float(float num_f)
   OLED_Num(Num);
   OLED_Char('.');
   
-  for(i=0;i<2;i++)
+  for(i=0;i<3;i++)
   {
 	  Num_f *= 10;
 	  OLED_Num((int)Num_f);
