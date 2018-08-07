@@ -26,7 +26,6 @@ void ccd_init()
 	GPIO__output__enable(36);   // 定义ccd的CLK端口    C4
 	PIT__config(PIT_Timer0,5,64,ccd_capture,13);
 //	PIT__config(PIT_Timer2,10,64,ccd_threshold_detect,12);//用于阈值确定
-
 }
 
 void ccd_capture()
@@ -76,7 +75,7 @@ void ccd_threshold_detect()
 	static ccd_send_flag;
 	static int ccd_temp_img[128];
 	char format[2] = ":";
-	char char_space[3]="  ";
+	char char_space[3]=" ";
 	uint8_t i;
 	if(!ccd_send_flag)
 		{
@@ -86,22 +85,34 @@ void ccd_threshold_detect()
 	{
 		for(i = 0;i<128;i++)
 		{
-			BlueTx(Int_to_char(i));
-			BlueTx(format);
+//			BlueTx(Int_to_char(i));
+//			BlueTx(format);
+			if(i==0)
+			{
+				LINFlex_TX('B');
+			}
 			BlueTx(Int_to_char(ccd_temp_img[i]));
 			BlueTx(char_space);
 		}
 		ccd_send_flag = 0;
 	}
-	ccd_max_min_send(ccd_temp_img);
+//	ccd_max_min_send(ccd_temp_img);
 	PIT__clear_flag(PIT_Timer2);
 }
 uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 {
 	uint8_t i;
+	uint8_t j;
 	uint8_t temp=0;
 	static uint8_t last,now;
 	static int count;
+	for(i = 0; i < 128; i++)
+	{
+		if(pic[i] >600)
+		{
+			return 0;
+		}
+	}
 	for(i = 0; i < 128; i++)
 	{
 		//将CCD图像进行二值化
@@ -110,12 +121,16 @@ uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 		else
 			pic[i] = 0;	
 	}
-	for(i = sta_pix; i <= end_pix; i++)if(pic[i])temp++;
-	OLED_Fill(0x00);
-	OLED_SetPointer(7,0);
-	OLED_Str("v4 ");
-	OLED_Float(temp);
-	if(temp >=(end_pix-sta_pix))  //end_pix-sta_pix
+	for(i = 0; i <= 127; i++)if(pic[i])temp++;
+//	OLED_Fill(0x00);
+//	OLED_SetPointer(3,0);
+//	OLED_Str("v3 ");
+//	OLED_Float(pic[63]); //调试用
+//	OLED_Fill(0x00);
+//	OLED_SetPointer(7,0);
+//	OLED_Str("v4 ");
+//	OLED_Float(temp); //调试用
+	if(temp >=126)  //end_pix-sta_pix
 	{
 		if (last) 
 		 {

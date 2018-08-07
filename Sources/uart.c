@@ -157,263 +157,256 @@ void LINFlex_RX(void)
 	temp=data[3];
 	switch (temp)
 	{
-	case 'X':
-		temp=data[0];
-//		points[2]=data[2]-'0';    //调试换算
-		points[2]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		sum_X+=points[2];
-		GPIO__output__enable(13);
-		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		if(mode==CHESS)
-		{
+		case 'X':
+			temp=data[0];
+	//		points[2]=data[2]-'0';    //调试换算
+			points[2]=(int16_t)(data[1]<<8|data[2]);    //实际换算
+			sum_X+=points[2];
+			GPIO__output__enable(13);
+			SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
+			if(mode==CHESS)
+			{
+				if(data[0]=='a')
+				{
+					enter_direction=LEFT;
+					destination[1][Step_Count]=(points[2]-1)*50+25;
+				}
+				else if(data[0]=='d')
+				{
+					enter_direction=RIGHT;
+					destination[1][Step_Count]=400-(points[2]-1)*50-25;
+				}
+				else
+				{
+					destination[0][Step_Count]=(points[2]-1)*50+25; 
+				}
+			}
+			else if(mode==WALL)
+			{
+				if(data[0]=='a')
+				{
+					enter_direction=LEFT;
+					destination[1][Step_Count]=((float)points[2]/2-1)*50+25+10;
+				}
+				else if(data[0]=='d')
+				{
+					enter_direction=RIGHT;
+					destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25+10;
+				}
+				else
+				{
+					destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
+			
+				}
+			}
+	//		sum_X+=destination[0][Step_Count];
+		break;
+		case 'Y': 
+	//		points[5]=data[2]-'0';    //调试换算
+			points[5]=(int16_t)(data[1]<<8|data[2]);    //实际换算
+			sum_Y+=points[5];
+	//		sum_temp+=points[5];
+			if(mode==CHESS)
+			{
+				if(enter_direction==LEFT)
+				{
+					destination[0][Step_Count]=400-(points[5]-1)*50-25; 
+				}
+				else if(enter_direction==RIGHT)
+				{
+					destination[0][Step_Count]=(points[5]-1)*50+25; 
+				}
+				else
+				{
+					destination[1][Step_Count]=(points[5]-1)*50+25; 
+				}
+			}
+			else if(mode==WALL)
+			{
+				if(enter_direction==LEFT)
+				{
+					destination[0][Step_Count]=400-((float)points[5]/2-1)*50-25; 
+				}
+				else if(enter_direction==RIGHT)
+				{
+					destination[0][Step_Count]=((float)points[5]/2-1)*50+25; 
+				}
+				else
+				{
+					destination[1][Step_Count]=((float)points[5]/2-1)*50+25+6; 
+				}
+			}
+	//		sum_Y+=destination[1][Step_Count];
+			Step_Count++;
+			if((mode==CHESS)&&(Step_Count==Step_Count_R))
+			{
+				Start_Flag=1;
+				Send_Flag=1;
+			}
+			if((mode==WALL)&&(Step_Count==2))
+			{
+				destination[1][0]=destination[1][0]+25;
+				destination[0][0]=(destination[0][0]+destination[0][1])/2;
+	//			else if(destination[0][0]==destination[0][1])
+	//			{
+	//				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
+	//				
+	//				if(destination[0][0]-400<=0)
+	//				{
+	//					destination[0][2]=destination[0][0];
+	//					destination[0][0]=destination[0][0]+25;
+	//				}
+	//				else
+	//				{
+	//					destination[0][2]=destination[0][0];
+	//					destination[0][0]=destination[0][0]-25;
+	//				}
+	//			}
+				Start_Flag=1;
+				Send_Flag=1;
+				Step_Count=1;
+			}
+		break;
+		case 'N': //是否执行吸棋子操作的标志位
+	//		pramdata[2]=data[2]-'0';    //调试换算
+	//		pram[0]=pramdata[2];    //调试换算
+			pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
+			Step_Count_R=pram[0];
+			mode=CHESS;
+		break;
+		case 'W':    
+			Step_Count_R=1;
+			mode=WALL;
+		case 'L':
+			direction=LEFT;
+		break;
+		case 'R':
+			direction=RIGHT;
+		break;
+		case 'F':
+			direction=FORWARD;
+		break;
+		case 'B':
+			direction=BEHIND;
+		break;
+		case 'x':
+	//		points[0]=data[0]-'0';    //调试换算
+	//		points[1]=data[1]-'0';    //调试换算
+	//		points[2]=data[2]-'0';    //调试换算
+	//		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
+			if(enter_direction==LEFT)
+			{
+				Y_location=(int16_t)(data[1]<<8|data[2]);    //实际换算
+			}
+			else if(enter_direction==RIGHT)
+			{
+				Y_location=400-(int16_t)(data[1]<<8|data[2]);
+			}
+			else
+			{
+				X_location=(int16_t)(data[1]<<8|data[2]);
+			}
+	//		X_error=X_last_location-X_location;
+	//		X_last_location=X_location;
+	//		X_last_error=X_last_last_location-X_last_location;
+	//		X_last_last_location=X_last_location;
+	//		Target_D_X=destination[0][step]-X_location;
+	//		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
+	//		
+		break;
+		case 'y': 
+	//		points[3]=data[0]-'0';    //调试换算
+	//		points[4]=data[1]-'0';	  //调试换算
+	//		points[5]=data[2]-'0';    //调试换算
+	//		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
+			times++;
+			if(times) 
+			{
+				run_flag=1;
+			}
+			if((enter_direction==LEFT))
+			{
+				X_location=400-(int16_t)(data[1]<<8|data[2]);     //实际换算
+			}
+			else if(enter_direction==RIGHT)
+			{
+				X_location=(int16_t)(data[1]<<8|data[2]); 
+			}
+			else
+			{
+				Y_location=(int16_t)(data[1]<<8|data[2]);
+			}
+	//		Target_D_Y=destination[1][step]-Y_location;
+	
+	//		Start_Flag=1;
+	//		if((fabs(Target_D_X)<=7)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
+	//		{
+	////			SIU.GPDO[45].B.PDO=!(step%2);
+	////			delay_ms(1000);
+	////			SIU.GPDO[71].B.PDO=!(step%2);
+	////			delay_ms(1000);
+	////			SIU.GPDO[71].B.PDO=(step%2);
+	//			
+	//			stop_flag=1;
+	//			
+	////			elec_flag=1;
+	//		}
+	//		time_before_last_time=last_time;
+			last_time=STM.CNT.R;
+	//		if(last_time<time_before_last_time) delta_uart_time=(last_time-time_before_last_time+0xffffffff)/1000000.0f;
+	//		else delta_uart_time=(last_time-time_before_last_time)/1000000.0f;
+	//		if(delta_uart_time>2) die_flag=1;
+		break;
+		case 'p':
+			points[2]=(int16_t)(data[1]<<8|data[2]);
+			destination[0][0]=(points[2]-1)*50+25; 
+		break;
+		case 'q':
+			points[5]=(int16_t)(data[1]<<8|data[2]);
+			destination[1][0]=(points[5]-1)*50+25;
+		case 'a': 
+			theta=(int16_t)(data[1]<<8|data[2]);    //实际换算
+		break;
+		case 'j':
+			GPIO__output__enable(13);
+			SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 			if(data[0]=='a')
 			{
 				enter_direction=LEFT;
-				destination[1][Step_Count]=(points[2]-1)*50+25;
+				destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
 			}
 			else if(data[0]=='d')
 			{
 				enter_direction=RIGHT;
-				destination[1][Step_Count]=400-(points[2]-1)*50-25;
+				destination[1][Step_Count]=400-(int16_t)(data[1]<<8|data[2]);
 			}
 			else
 			{
-				destination[0][Step_Count]=(points[2]-1)*50+25; 
+				destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]);
 			}
-		}
-		else if(mode==WALL)
-		{
+		break;
+		case 'k':
 			if(data[0]=='a')
 			{
-				enter_direction=LEFT;
-				destination[1][Step_Count]=((float)points[2]/2-1)*50+25+10;
+				destination[0][Step_Count]=400-(int16_t)(data[1]<<8|data[2]); 
 			}
 			else if(data[0]=='d')
 			{
-				enter_direction=RIGHT;
-				destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25+10;
+				destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]); 
 			}
 			else
 			{
-				destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
-		
+				destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
 			}
-		}
-//		sum_X+=destination[0][Step_Count];
-	break;
-	case 'Y': 
-//		points[5]=data[2]-'0';    //调试换算
-		points[5]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		sum_Y+=points[5];
-//		sum_temp+=points[5];
-		if(mode==CHESS)
-		{
-			if(enter_direction==LEFT)
+			Step_Count++;
+			if(Step_Count==Step_Count_R)
 			{
-				destination[0][Step_Count]=400-(points[5]-1)*50-25; 
+				Start_Flag=1;
+				Send_Flag=1;
 			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[0][Step_Count]=(points[5]-1)*50+25; 
-			}
-			else
-			{
-				destination[1][Step_Count]=(points[5]-1)*50+25; 
-			}
-		}
-		else if(mode==WALL)
-		{
-			if(enter_direction==LEFT)
-			{
-				destination[0][Step_Count]=400-((float)points[5]/2-1)*50-25; 
-			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[0][Step_Count]=((float)points[5]/2-1)*50+25; 
-			}
-			else
-			{
-				destination[1][Step_Count]=((float)points[5]/2-1)*50+25+6; 
-			}
-		}
-//		sum_Y+=destination[1][Step_Count];
-		Step_Count++;
-		if((mode==CHESS)&&(Step_Count==Step_Count_R))
-		{
-			Start_Flag=1;
-			Send_Flag=1;
-		}
-		if((mode==WALL)&&(Step_Count==2))
-		{
-			destination[1][0]=destination[1][0]+25;
-			destination[0][0]=(destination[0][0]+destination[0][1])/2;
-//			else if(destination[0][0]==destination[0][1])
-//			{
-//				destination[1][0]=(destination[1][0]+destination[1][1])/2+4;
-//				
-//				if(destination[0][0]-400<=0)
-//				{
-//					destination[0][2]=destination[0][0];
-//					destination[0][0]=destination[0][0]+25;
-//				}
-//				else
-//				{
-//					destination[0][2]=destination[0][0];
-//					destination[0][0]=destination[0][0]-25;
-//				}
-//			}
-			Start_Flag=1;
-			Send_Flag=1;
-			Step_Count=1;
-		}
-	break;
-	case 'N': //是否执行吸棋子操作的标志位
-//		pramdata[2]=data[2]-'0';    //调试换算
-//		pram[0]=pramdata[2];    //调试换算
-		pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		Step_Count_R=pram[0];
-		mode=CHESS;
-	break;
-	case 'W':    
-		Step_Count_R=1;
-		mode=WALL;
-	case 'L':
-		direction=LEFT;
-	break;
-	case 'R':
-		direction=RIGHT;
-	break;
-	case 'F':
-		direction=FORWARD;
-	break;
-	case 'B':
-		direction=BEHIND;
-	break;
-	case 'x':
-//		points[0]=data[0]-'0';    //调试换算
-//		points[1]=data[1]-'0';    //调试换算
-//		points[2]=data[2]-'0';    //调试换算
-//		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
-		if(enter_direction==LEFT)
-		{
-			Y_location=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		}
-		else if(enter_direction==RIGHT)
-		{
-			Y_location=400-(int16_t)(data[1]<<8|data[2]);
-		}
-		else
-		{
-			X_location=(int16_t)(data[1]<<8|data[2]);
-		}
-//		X_error=X_last_location-X_location;
-//		X_last_location=X_location;
-//		X_last_error=X_last_last_location-X_last_location;
-//		X_last_last_location=X_last_location;
-//		Target_D_X=destination[0][step]-X_location;
-//		C_flag=((fabs(X_error)-3)&&(fabs(X_last_error)-3));	
-//		
-	break;
-	case 'y': 
-//		points[3]=data[0]-'0';    //调试换算
-//		points[4]=data[1]-'0';	  //调试换算
-//		points[5]=data[2]-'0';    //调试换算
-//		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
-		times++;
-		if(times) 
-		{
-			run_flag=1;
-		}
-		if((enter_direction==LEFT))
-		{
-			X_location=400-(int16_t)(data[1]<<8|data[2]);     //实际换算
-		}
-		else if(enter_direction==RIGHT)
-		{
-			X_location=(int16_t)(data[1]<<8|data[2]); 
-		}
-		else
-		{
-			Y_location=(int16_t)(data[1]<<8|data[2]);
-		}
-//		Target_D_Y=destination[1][step]-Y_location;
-
-//		Start_Flag=1;
-//		if((fabs(Target_D_X)<=7)&&(fabs(Target_D_Y)<=7)&&(step<Step_Count))
-//		{
-////			SIU.GPDO[45].B.PDO=!(step%2);
-////			delay_ms(1000);
-////			SIU.GPDO[71].B.PDO=!(step%2);
-////			delay_ms(1000);
-////			SIU.GPDO[71].B.PDO=(step%2);
-//			
-//			stop_flag=1;
-//			
-////			elec_flag=1;
-//		}
-//		time_before_last_time=last_time;
-		last_time=STM.CNT.R;
-//		if(last_time<time_before_last_time) delta_uart_time=(last_time-time_before_last_time+0xffffffff)/1000000.0f;
-//		else delta_uart_time=(last_time-time_before_last_time)/1000000.0f;
-//		if(delta_uart_time>2) die_flag=1;
-	break;
-	case 'p':
-		points[2]=(int16_t)(data[1]<<8|data[2]);
-		destination[0][0]=(points[2]-1)*50+25; 
-	break;
-	case 'q':
-		points[5]=(int16_t)(data[1]<<8|data[2]);
-		destination[1][0]=(points[5]-1)*50+25;
-	case 'a': 
-		theta=(int16_t)(data[1]<<8|data[2]);    //实际换算
-	break;
-	case 'E':
-		Elec_flag=1;
-	break;
-	case 'c':
-		pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		Step_Count_R=pram[0];
-	break;
-	case 'j':
-		GPIO__output__enable(13);
-		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		if(data[0]=='a')
-		{
-			enter_direction=LEFT;
-			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
-		}
-		else if(data[0]=='d')
-		{
-			enter_direction=RIGHT;
-			destination[1][Step_Count]=400-(int16_t)(data[1]<<8|data[2]);
-		}
-		else
-		{
-			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]);
-		}
-	break;
-	case 'k':
-		if(data[0]=='a')
-		{
-			destination[0][Step_Count]=400-(int16_t)(data[1]<<8|data[2]); 
-		}
-		else if(data[0]=='d')
-		{
-			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]); 
-		}
-		else
-		{
-			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
-		}
-		Step_Count++;
-		if(Step_Count==Step_Count_R)
-		{
-			Start_Flag=1;
-			Send_Flag=1;
-		}
-	default:
-		initLINFlex_0_UART(12);
-	break;
+		default:
+			initLINFlex_0_UART(12);
+		break;
 	}
 	if (flagR||flagr) flagRr=1;
 	LINFLEX_0.UARTSR.B.DRF = 1;  
