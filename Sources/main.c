@@ -37,7 +37,7 @@ extern int step;
 char str[4];
 extern int sum_X,sum_Y;
 float omiga;
-int straight_flag=0;
+int straight_flag=1;
 extern C_flag;
 extern uint32_t time,last_time;
 static uint32_t start_time,stop_time;
@@ -90,7 +90,7 @@ int main(void)
 	Encoder__config(&ecd[0],EMIOS_CH8,1,390,10,0.0574,48);  //A8,D0(A2)
 	Encoder__config(&ecd[1],EMIOS_CH24,1,390,10,0.0574,52);  //D12,D4(A1)
 	Encoder__config(&ecd[2],EMIOS_CH16,1,390,10,0.0574,47);  //E0,C15
-	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.0574,41);  //A0,C9原本是舵机的时基，此处暂不考虑舵机的使用，故暂用来做输入检测
+	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.0574,41);  //A0,C9原本是舵机的时基，此处暂不考虑舵机的使用，故暂用来做输入检�?
 	Encoder__init(&ecd[0]);
 	Encoder__init(&ecd[1]); 
 	Encoder__init(&ecd[2]);
@@ -100,7 +100,7 @@ int main(void)
 	GPIO__output__enable(12);
 	GPIO__output__enable(13);
 	GPIO__output__enable(71);  //E7 推拉机构
-	GPIO__output__enable(45);  //C13 电磁铁
+	GPIO__output__enable(45);  //C13 电磁�?
 	GPIO__output__enable(44);  //C12 右前方电磁铁
 	GPIO__output__enable(40);  //C8 左前方电磁铁
 	SIU.GPDO[45].B.PDO=0; //0
@@ -116,7 +116,7 @@ int main(void)
 //		if ((ccd_edge_detect(0,127,200,img)==1))
 //		{
 //			SIU.GPDO[15].B.PDO=0;
-//		}                             //调试用
+//		}                             //调试�?
 		if((elec_flag==1))
 		{
 //			Mode0_Quick();
@@ -276,6 +276,7 @@ void test1()
 		stop_flag=0;
 		elec_flag=1;
 		X_converse=0;
+		straight_flag=1;
 		i=0;
 		j=0;
 		g=0; //this is a try
@@ -304,7 +305,7 @@ void test1()
 	
 	//**********************************************************************//
 	if(fabs(theta - 900)>80) omiga=-0.44;
-	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //正为逆时针，负为顺时针
+	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //正为逆时针，负为顺时�?
 	if(fabs(theta - 900)<=-80) omiga=0.44;
 	motor_a[0]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[1]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
@@ -326,17 +327,17 @@ void test1()
 	motor_a[2]->actual_speed=ecd[2]._speed;
 	motor_a[3]->actual_speed=ecd[3]._speed;
 	
-	//坐标系原点为左上方
-	//************************读取车速***************************//
+	//坐标系原点为左上�?
+	//************************读取车�?***************************//
 	
 //		if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
 //		{
-			Target_D_Y_R=destination[1][step]-Y_location;//+0.01*100*100/54.7*0.25*(motor_a[0]->actual_speed+motor_a[1]->actual_speed+motor_a[2]->actual_speed+motor_a[3]->actual_speed);
+	Target_D_Y_R=destination[1][step]-Y_location;//+0.01*100*100/54.7*0.25*(motor_a[0]->actual_speed+motor_a[1]->actual_speed+motor_a[2]->actual_speed+motor_a[3]->actual_speed);
 //			Y_location_R=Y_location-delta*100*(motor_a[0]->actual_speed);
 //		}
 //		else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
 //		{
-			Target_D_X_R=destination[0][step]-X_location;//-0.01*100*100/48*0.25*(motor_a[0]->actual_speed-motor_a[1]->actual_speed+motor_a[2]->actual_speed-motor_a[3]->actual_speed);
+	Target_D_X_R=destination[0][step]-X_location;//-0.01*100*100/48*0.25*(motor_a[0]->actual_speed-motor_a[1]->actual_speed+motor_a[2]->actual_speed-motor_a[3]->actual_speed);
 //			X_location_R=X_location+delta*100*(motor_a[0]->actual_speed);
 //		}
 //		else
@@ -350,11 +351,11 @@ void test1()
 //		Target_D_X_R=destination[0][step]-X_location;
 //	}//此处可能有用
 	
-	//*************************卡尔曼滤波****************************//
+	//*************************卡尔曼滤�?****************************//
 	
-		if(fabs(Target_D_Y_R)>near_threshold)
+		if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
 		{
-			if(Target_D_Y_R>far_threshold) //后
+			if(Target_D_Y_R>far_threshold) //�?
 			{
 				if(i<=50)
 				{
@@ -387,7 +388,7 @@ void test1()
 				}
 			}
 			
-			else if(Target_D_Y_R<=-far_threshold) //前
+			else if(Target_D_Y_R<=-far_threshold) //�?
 			{	
 				if(i<=50)
 				{
@@ -421,9 +422,10 @@ void test1()
 				}
 			}
 		}
-		else if((fabs(Target_D_Y_R)<=near_threshold)||(X_converse==1))
+		else if((fabs(Target_D_Y_R)<=near_threshold) && (straight_flag==1))  straight_flag=0;
+		else if(((fabs(Target_D_X_R)>near_threshold) && (straight_flag==0)) || (X_converse==1))
 		{
-			if(Target_D_X_R>far_threshold)  //右
+			if(Target_D_X_R>far_threshold)  //�?
 			{
 				if(k<=50)
 				{
@@ -447,7 +449,7 @@ void test1()
 				motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
 			}
-			else if(Target_D_X_R<=-far_threshold)  //左
+			else if(Target_D_X_R<=-far_threshold)  //�?
 			{
 				if(g<=50)
 				{
@@ -471,7 +473,11 @@ void test1()
 				motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
 			}
-			}
+		}
+		else if(((fabs(Target_D_Y_R)>near_threshold)&&(fabs(Target_D_X_R)<=near_threshold)&&(straight_flag==0)))
+		{
+			straight_flag=1;
+		}
 	
 		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold)&&(step<Step_Count))//此处可能有用
 		{
@@ -518,7 +524,7 @@ void test1()
 	if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
 	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
 	
-	//***************************车速限幅***********************************//
+	//***************************车速限�?***********************************//
 	
 	motor_output(motor_a[0],motor_a[0]->duty);
 	motor_output(motor_a[1],motor_a[1]->duty);
