@@ -43,7 +43,7 @@ extern uint32_t time,last_time;
 static uint32_t start_time,stop_time;
 uint32_t time_0;
 float delta;
-float Target_D_X_R=10,Target_D_Y_R=10;
+float Target_D_X_R=0,Target_D_Y_R=0;
 float X_location_R,Y_location_R;
 extern float optimumCovariance_X, optimumCovariance_Y,kalmanGain_X, kalmanGain_Y, optimum_X, optimum_Y, estimate_X, estimate_Y;
 extern float estimateCovariance_X,estimateCovariance_Y;
@@ -66,7 +66,7 @@ static int X_converse;
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
 #define far_threshold 30
-#define near_threshold 3
+#define near_threshold 7
 
 void Mode0_Quick(void);
 int main(void) 
@@ -77,7 +77,7 @@ int main(void)
 	initLINFlex_0_UART(11);
 	OLED_Init();
 	STM_init();
-	ccd_init();
+//	ccd_init();
 	
 	motor_config(&(Motor[0]),EMIOS_CH3,EMIOS_CH4,0,0,0,10,10,10,10);  //B11,B12
 	motor_config(&(Motor[1]),EMIOS_CH5,EMIOS_CH6,0,0,0,10,10,10,10);  //B13,B14
@@ -119,8 +119,9 @@ int main(void)
 //		}                             //调试用
 		if((elec_flag==1))
 		{
+//			Mode0_Quick();
 			PIT__stop(PIT_Timer1);
-			LINFLEX_0.UARTCR.B.RXEN = 0;
+			LINFLEX_0.LINIER.B.DRIE   = 0;
 			motor_output(motor_a[0],0);
 			motor_output(motor_a[1],0);
 			motor_output(motor_a[2],0);
@@ -193,13 +194,14 @@ int main(void)
 			}
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
-			LINFLEX_0.UARTCR.B.RXEN = 1;
+			LINFLEX_0.LINIER.B.DRIE   = 1;
 		}
 		
 		if(exit_flag)
 		{
+//			Mode0_Quick();
 			PIT__stop(PIT_Timer1);
-			LINFLEX_0.UARTCR.B.RXEN = 0;
+			LINFLEX_0.LINIER.B.DRIE   = 0;
 			switch(direction)
 			{
 			case(LEFT):
@@ -237,19 +239,19 @@ void Mode0_Quick(void)
 
 	OLED_SetPointer(1,0);
 	OLED_Str("v1 ");
-	OLED_Float(Target_D_X_R);
+	OLED_Float(Target_D_Y_R);
 
 	OLED_SetPointer(3,0);
 	OLED_Str("v2 ");
-	OLED_Float(Target_D_Y_R);
+	OLED_Float(Target_D_X_R);
 
 	OLED_SetPointer(5,0);
 	OLED_Str("v3 ");
-	OLED_Float(destination[1][step]);
+	OLED_Float(Y_location);
 	
 	OLED_SetPointer(7,0);
 	OLED_Str("v4 ");
-	OLED_Float(destination[0][step]);
+	OLED_Float(X_location);
 }
 
 void test1()
@@ -269,8 +271,8 @@ void test1()
 	if(stop_flag)
 	{
 		step++;
-        Target_D_Y_R=destination[1][step]-Y_location;
-	    Target_D_X_R=destination[0][step]-X_location;
+//      Target_D_Y_R=destination[1][step]-Y_location;
+//	    Target_D_X_R=destination[0][step]-X_location;
 		stop_flag=0;
 		elec_flag=1;
 		X_converse=0;
@@ -326,31 +328,22 @@ void test1()
 	
 	//坐标系原点为左上方
 	//************************读取车速***************************//
-	if(run_flag)
-	{
-//	time=STM.CNT.R;
-//	
-//	if(time<last_time)
-//	{
-//		time_0=time+0xffffffff-last_time;
-//	}
-//	else
-//	{
-//		time_0=time-last_time;
-//	}
 	
-//	delta=time_0/1000000.0f;
-	
-		if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
-		{
-			Target_D_Y_R=destination[1][step]-Y_location;///+0.01*100*100/54.7*0.25*(motor_a[0]->actual_speed+motor_a[1]->actual_speed+motor_a[2]->actual_speed+motor_a[3]->actual_speed);
-			Y_location_R=Y_location-delta*100*(motor_a[0]->actual_speed);
-		}
-		else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
-		{
+//		if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)>0)
+//		{
+			Target_D_Y_R=destination[1][step]-Y_location;//+0.01*100*100/54.7*0.25*(motor_a[0]->actual_speed+motor_a[1]->actual_speed+motor_a[2]->actual_speed+motor_a[3]->actual_speed);
+//			Y_location_R=Y_location-delta*100*(motor_a[0]->actual_speed);
+//		}
+//		else if((motor_a[0]->actual_speed)*(motor_a[1]->actual_speed)<0)
+//		{
 			Target_D_X_R=destination[0][step]-X_location;//-0.01*100*100/48*0.25*(motor_a[0]->actual_speed-motor_a[1]->actual_speed+motor_a[2]->actual_speed-motor_a[3]->actual_speed);
-			X_location_R=X_location+delta*100*(motor_a[0]->actual_speed);
-		}
+//			X_location_R=X_location+delta*100*(motor_a[0]->actual_speed);
+//		}
+//		else
+//		{
+//			Target_D_Y_R=destination[1][step]-Y_location;
+//			Target_D_X_R=destination[0][step]-X_location;		
+//		}
 //	else if(motor_a[0]->actual_speed==0)
 //	{
 //		Target_D_Y_R=destination[1][step]-Y_location;
@@ -359,8 +352,6 @@ void test1()
 	
 	//*************************卡尔曼滤波****************************//
 	
-//	if(delta<=1.5)
-//	{
 		if(fabs(Target_D_Y_R)>near_threshold)
 		{
 			if(Target_D_Y_R>far_threshold) //后
@@ -430,7 +421,7 @@ void test1()
 				}
 			}
 		}
-		if((fabs(Target_D_Y_R)<=near_threshold)||(X_converse==1))
+		else if((fabs(Target_D_Y_R)<=near_threshold)||(X_converse==1))
 		{
 			if(Target_D_X_R>far_threshold)  //右
 			{
@@ -480,76 +471,20 @@ void test1()
 				motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
 			}
-	//			else
-	//			{
-	//				motor_output(motor_a[0],0);
-	//				motor_output(motor_a[1],0);
-	//				motor_output(motor_a[2],0);
-	//				motor_output(motor_a[3],0);
-	//				PIT__clear_flag(PIT_Timer1);
-	//				return;
-	//			}
 			}
-//	}
 	
-	//***********************速度控制******************************//
-	
-//	if(delta>=1.5)
-//	{
-//		if((X_location_R<15))
-//		{
-//			motor_a[0]->target_speed=0.4;
-//			motor_a[1]->target_speed=-0.4;
-//			motor_a[2]->target_speed=0.4;
-//			motor_a[3]->target_speed=-0.4;
-//		}
-//		else if((X_location_R>385))
-//		{
-//			motor_a[0]->target_speed=-0.4;
-//			motor_a[1]->target_speed=0.4;
-//			motor_a[2]->target_speed=-0.4;
-//			motor_a[3]->target_speed=0.4;
-//		}
-//		else if((Y_location_R<15))
-//		{
-//			motor_a[0]->target_speed=-0.4;
-//			motor_a[1]->target_speed=-0.4;
-//			motor_a[2]->target_speed=-0.4;
-//			motor_a[3]->target_speed=-0.4;			
-//		}
-//		else if((Y_location_R>385))
-//		{
-//			motor_a[0]->target_speed=0.4;
-//			motor_a[1]->target_speed=0.4;
-//			motor_a[2]->target_speed=0.4;
-//			motor_a[3]->target_speed=0.4;				
-//		}
-//	}
-//
-		
-		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold))//此处可能有用
+		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold)&&(step<Step_Count))//此处可能有用
 		{
 			stop_flag=1;
-			motor_a[0]->target_speed=0;
-			motor_a[1]->target_speed=0;
-			motor_a[2]->target_speed=0;
-			motor_a[3]->target_speed=0;
+			motor_output(motor_a[0],0);
+			motor_output(motor_a[1],0);
+			motor_output(motor_a[2],0);
+			motor_output(motor_a[3],0);
 			SIU.GPDO[14].B.PDO=1;
 			PIT__clear_flag(PIT_Timer1);
 			return;
 		}
-	}	
-//	
-//	// if(die_flag)
-//	// {
-//	// 	motor_a[0]->target_speed=0.25;
-//	// 	motor_a[1]->target_speed=0.25;
-//	// 	motor_a[2]->target_speed=0.25;
-//	// 	motor_a[3]->target_speed=0.25;
-//	// }
-
-	//****************************防出界控制********************************//
-	
+	//***********************速度控制******************************//
 	PID__config(&motor_a[0]->motor_pid,0.24f,1.25f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
 	PID__config(&motor_a[1]->motor_pid,0.24f,1.25f,0,10,10,70,10);
 	PID__config(&motor_a[2]->motor_pid,0.24f,1.25f,0,10,10,70,10);
