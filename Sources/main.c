@@ -69,6 +69,7 @@ static int X_converse;
 #define near_threshold 7
 
 void Mode0_Quick(void);
+void speed_control(void);
 int main(void) 
 {
 	initModesAndClock(); 
@@ -126,37 +127,34 @@ int main(void)
 			motor_output(motor_a[2],0);
 			motor_output(motor_a[3],0);
 			
-			if(mode==WALL)
+			if(destination[3][step-1]==1)
+			{
+					;
+			}
+			if(destination[3][step-1]==TAKING)
+			{
+				SIU.GPDO[71].B.PDO=0;
+				delay_ms(500);
+				SIU.GPDO[45].B.PDO=1;
+				delay_ms(500);
+				SIU.GPDO[71].B.PDO=1;
+				delay_ms(200);
+			}
+			else if(destination[3][step-1]==PUTTING)
+			{
+				SIU.GPDO[71].B.PDO=1;
+				delay_ms(500);
+				SIU.GPDO[45].B.PDO=0;
+				delay_ms(500);
+			}
+			else if(destination[3][step-1]==WALL)
 			{
 				delay_ms(600);			
 				SIU.GPDO[44].B.PDO=!(step)%2;//姝ゅ杩樺簲鏈夌數纾侀搧鎿嶄綔
 				SIU.GPDO[40].B.PDO=!(step)%2;
 				delay_ms(1000);
 			}
-			
-			if(mode==CHESS)
-			{
-				if(destination[3][step-1]==1)
-				{
-						;
-				}
-				if(destination[3][step-1]==TAKING)
-				{
-						SIU.GPDO[71].B.PDO=0;
-						delay_ms(500);
-						SIU.GPDO[45].B.PDO=1;
-						delay_ms(500);
-						SIU.GPDO[71].B.PDO=1;
-						delay_ms(200);
-				}
-				else if(destination[3][step-1]==PUTTING)
-				{
-						SIU.GPDO[71].B.PDO=1;
-						delay_ms(500);
-						SIU.GPDO[45].B.PDO=0;
-						delay_ms(500);
-				}
-			}
+
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
 			LINFLEX_0.LINIER.B.DRIE = 1;
@@ -169,28 +167,28 @@ int main(void)
 			switch(direction)
 			{
 			case(LEFT):
-				motor_output(motor_a[0],-0.5);
-				motor_output(motor_a[1],0.5);
-				motor_output(motor_a[2],-0.5);
-				motor_output(motor_a[3],0.5);
+				motor_output(motor_a[0],-0.8);
+				motor_output(motor_a[1],0.8);
+				motor_output(motor_a[2],-0.8);
+				motor_output(motor_a[3],0.8);
 			break;
 			case(RIGHT):
-				motor_output(motor_a[0],0.5);
-				motor_output(motor_a[1],-0.5);
-				motor_output(motor_a[2],0.5);
-				motor_output(motor_a[3],-0.5);
+				motor_output(motor_a[0],0.8);
+				motor_output(motor_a[1],-0.8);
+				motor_output(motor_a[2],0.8);
+				motor_output(motor_a[3],-0.8);
 			break;
 			case(FORWARD):
-				motor_output(motor_a[0],0.5);
-				motor_output(motor_a[1],0.5);
-				motor_output(motor_a[2],0.5);
-				motor_output(motor_a[3],0.5);
+				motor_output(motor_a[0],0.8);
+				motor_output(motor_a[1],0.8);
+				motor_output(motor_a[2],0.8);
+				motor_output(motor_a[3],0.8);
 			break;
 			case(BEHIND):
-				motor_output(motor_a[0],-0.5);
-				motor_output(motor_a[1],-0.5);
-				motor_output(motor_a[2],-0.5);
-				motor_output(motor_a[3],-0.5);
+				motor_output(motor_a[0],-0.8);
+				motor_output(motor_a[1],-0.8);
+				motor_output(motor_a[2],-0.8);
+				motor_output(motor_a[3],-0.8);
 			break;
 			}
 		}
@@ -445,60 +443,71 @@ void test1()
 		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold)&&(step<Step_Count))//姝ゅ鍙兘鏈夌�???
 		{
 			stop_flag=1;
-			motor_output(motor_a[0],0);
-			motor_output(motor_a[1],0);
-			motor_output(motor_a[2],0);
-			motor_output(motor_a[3],0);
+			// motor_output(motor_a[0],0);
+			// motor_output(motor_a[1],0);
+			// motor_output(motor_a[2],0);
+			// motor_output(motor_a[3],0);
+			motor_a[0]->target_speed=0;
+			motor_a[1]->target_speed=0;
+			motor_a[2]->target_speed=0;
+			motor_a[3]->target_speed=0;
+			speed_control();
 			SIU.GPDO[14].B.PDO=1;
 			PIT__clear_flag(PIT_Timer1);
 			return;
 		}
-	//***********************閫熷害鎺у�???******************************//
-	PID__config(&motor_a[0]->motor_pid,0.24f,1.25f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
-	PID__config(&motor_a[1]->motor_pid,0.24f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[2]->motor_pid,0.24f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[3]->motor_pid,0.24f,1.25f,0,10,10,70,10);
-	
-	//*****************************PID閰嶇�???************************************//
-	
-	if((motor_a[0]->target_speed)*(motor_a[1]->target_speed)<0)
-	{
-		motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed);
-		motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed);
-		motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed);
-		motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed);
-	}
-	else
-	{
-		motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed);
-		motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed);
-		motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed);
-		motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed);	
-	}
-	
-	//*****************************PID鎺у埗*************************************//
-	
-	if(motor_a[0]->duty>1.0f) motor_a[0]->duty=1.0f;
-	if(motor_a[0]->duty<-1.0f) motor_a[0]->duty=-1.0f;
-	if(motor_a[1]->duty>1.0f) motor_a[1]->duty=1.0f;
-	if(motor_a[1]->duty<-1.0f) motor_a[1]->duty=-1.0f;
-	if(motor_a[2]->duty>1.0f) motor_a[2]->duty=1.0f;
-	if(motor_a[2]->duty<-1.0f) motor_a[2]->duty=-1.0f;
-	if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
-	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
-	
-	//***************************杞﹂�闄愬�***********************************//
-	
-	motor_output(motor_a[0],motor_a[0]->duty);
-	motor_output(motor_a[1],motor_a[1]->duty);
-	motor_output(motor_a[2],motor_a[2]->duty);
-	motor_output(motor_a[3],motor_a[3]->duty);
-	
-	//*************************杈撳嚭PWM***************************//
+
+		speed_control();
 	
 	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 	PIT__clear_flag(PIT_Timer1);
 }
+
+	void speed_control()
+	{
+			//***********************閫熷害鎺у�???******************************//
+		PID__config(&motor_a[0]->motor_pid,0.24f,1.25f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
+		PID__config(&motor_a[1]->motor_pid,0.24f,1.25f,0,10,10,70,10);
+		PID__config(&motor_a[2]->motor_pid,0.24f,1.25f,0,10,10,70,10);
+		PID__config(&motor_a[3]->motor_pid,0.24f,1.25f,0,10,10,70,10);
+		
+		//*****************************PID閰嶇�???************************************//
+		
+		if((motor_a[0]->target_speed)*(motor_a[1]->target_speed)<0)
+		{
+			motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed);
+			motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed);
+			motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed);
+			motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed);
+		}
+		else
+		{
+			motor_a[0]->duty+=PID__update(&(motor_a[0]->motor_pid), motor_a[0]->target_speed, motor_a[0]->actual_speed);
+			motor_a[1]->duty+=PID__update(&(motor_a[1]->motor_pid), motor_a[1]->target_speed, motor_a[1]->actual_speed);
+			motor_a[2]->duty+=PID__update(&(motor_a[2]->motor_pid), motor_a[2]->target_speed, motor_a[2]->actual_speed);
+			motor_a[3]->duty+=PID__update(&(motor_a[3]->motor_pid), motor_a[3]->target_speed, motor_a[3]->actual_speed);	
+		}
+		
+		//*****************************PID鎺у埗*************************************//
+		
+		if(motor_a[0]->duty>1.0f) motor_a[0]->duty=1.0f;
+		if(motor_a[0]->duty<-1.0f) motor_a[0]->duty=-1.0f;
+		if(motor_a[1]->duty>1.0f) motor_a[1]->duty=1.0f;
+		if(motor_a[1]->duty<-1.0f) motor_a[1]->duty=-1.0f;
+		if(motor_a[2]->duty>1.0f) motor_a[2]->duty=1.0f;
+		if(motor_a[2]->duty<-1.0f) motor_a[2]->duty=-1.0f;
+		if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
+		if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
+		
+		//***************************杞﹂�闄愬�***********************************//
+		
+		motor_output(motor_a[0],motor_a[0]->duty);
+		motor_output(motor_a[1],motor_a[1]->duty);
+		motor_output(motor_a[2],motor_a[2]->duty);
+		motor_output(motor_a[3],motor_a[3]->duty);
+		
+		//*************************杈撳嚭PWM***************************//
+	}
 
 void test()
 {

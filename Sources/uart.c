@@ -162,99 +162,59 @@ void LINFlex_RX(void)
 		points[2]=(int16_t)(data[1]<<8|data[2]);    //实际换算
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		if(mode==CHESS)
+		if(enter_direction==LEFT)
 		{
-			if(enter_direction==LEFT)
-			{
-				destination[1][Step_Count]=points[2];
-			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[1][Step_Count]=400-points[2];
-			}
-			else
-			{
-				destination[0][Step_Count]=points[2]; 
-			}
+			destination[1][Step_Count]=points[2];
 		}
-		else if(mode==WALL)
+		else if(enter_direction==RIGHT)
 		{
-			if(enter_direction==LEFT)
-			{
-				destination[1][Step_Count]=((float)points[2]/2-1)*50+25+10;
-			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[1][Step_Count]=400-((float)points[2]/2-1)*50-25+10;
-			}
-			else
-			{
-				destination[0][Step_Count]=((float)points[2]/2-1)*50+25; 
-		
-			}
+			destination[1][Step_Count]=400-points[2];
+		}
+		else
+		{
+			destination[0][Step_Count]=points[2]; 
 		}
 //		sum_X+=destination[0][Step_Count];
 	break;
 	case 'k': 
 //		points[5]=data[2]-'0';    //调试换算
 		points[5]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		if(mode==CHESS)
-		{
-			if(enter_direction==LEFT)
-			{
-				destination[0][Step_Count]=400-points[5]; 
-			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[0][Step_Count]=points[5]; 
-			}
-			else
-			{
-				destination[1][Step_Count]=points[5]; 
-			}
 
-			if(data[0]=='b')
-			{
-				destination[3][Step_Count]=PASSING;
-			}
-			else if(data[0]=='q')
-			{
-				destination[3][Step_Count]=TAKING;
-			}
-			else if(data[0]=='f')
-			{
-				destination[3][Step_Count]=PUTTING;
-			}
-		}
-		else if(mode==WALL)
+		if(enter_direction==LEFT)
 		{
-			if(enter_direction==LEFT)
-			{
-				destination[0][Step_Count]=400-((float)points[5]/2-1)*50-25; 
-			}
-			else if(enter_direction==RIGHT)
-			{
-				destination[0][Step_Count]=((float)points[5]/2-1)*50+25; 
-			}
-			else
-			{
-				destination[1][Step_Count]=((float)points[5]/2-1)*50+25+6; 
-			}
+			destination[0][Step_Count]=400-points[5]; 
+		}
+		else if(enter_direction==RIGHT)
+		{
+			destination[0][Step_Count]=points[5]; 
+		}
+		else
+		{
+			destination[1][Step_Count]=points[5]; 
+		}
+
+		if(data[0]=='b')
+		{
+			destination[3][Step_Count]=PASSING;
+		}
+		else if(data[0]=='q')
+		{
+			destination[3][Step_Count]=TAKING;
+		}
+		else if(data[0]=='f')
+		{
+			destination[3][Step_Count]=PUTTING;
+		}
+		else if(data[0]=='w')
+		{
+			destination[3][Step_Count]=WALL;
 		}
 //		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
-		if((mode==CHESS)&&(Step_Count==Step_Count_R))
+		if(Step_Count==Step_Count_R)
 		{
 			Start_Flag=1;
 			Send_Flag=1;
-		}
-		if((mode==WALL)&&(Step_Count==2))
-		{
-			destination[1][0]=destination[1][0]+25;
-			destination[0][0]=(destination[0][0]+destination[0][1])/2;
-			Start_Flag=1;
-			Send_Flag=1;
-			Step_Count=1;
 		}
 	break;
 	case 'C': //是否执行吸棋子操作的标志位
@@ -270,11 +230,7 @@ void LINFlex_RX(void)
 			enter_direction=RIGHT;
 		}
 		Step_Count_R=pram[0];
-		mode=CHESS;
 	break;
-	case 'W':    
-		Step_Count_R=1;
-		mode=WALL;
 	case 'L':
 		direction=LEFT;
 	break;
@@ -325,14 +281,6 @@ void LINFlex_RX(void)
 		}
 		
 		last_time=STM.CNT.R;
-	break;
-	case 'p':
-		points[2]=(int16_t)(data[1]<<8|data[2]);
-		destination[0][0]=(points[2]-1)*50+25; 
-	break;
-	case 'q':
-		points[5]=(int16_t)(data[1]<<8|data[2]);
-		destination[1][0]=(points[5]-1)*50+25;
 	break;
 	case 'a': 
 		theta=(int16_t)(data[1]<<8|data[2]);    //实际换算
