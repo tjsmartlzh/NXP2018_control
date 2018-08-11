@@ -23,7 +23,7 @@ float   pram[4];
 uint8_t Lampe_test;
 extern uint8_t Reverse_finish;
 uint8_t Elec_flag;
-float destination[3][10];//this is for final race  2 --> 3
+float destination[2][10];
 uint8_t Start_Flag=0,Send_Flag=0;
 int Step_Count=0,Step_Count_R,step=0;
 float Target_D_X,Target_D_Y;
@@ -156,59 +156,22 @@ void LINFlex_RX(void)
 	temp=data[3];
 	switch (temp)
 	{
-	case 'j':
+	case 'X':
 		temp=data[0];
 //		points[2]=data[2]-'0';    //调试换算
 		points[2]=(int16_t)(data[1]<<8|data[2]);    //实际换算
+		sum_X+=points[2];
 		GPIO__output__enable(13);
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
-		if(enter_direction==LEFT)
-		{
-			destination[1][Step_Count]=points[2];
-		}
-		else if(enter_direction==RIGHT)
-		{
-			destination[1][Step_Count]=400-points[2];
-		}
-		else
-		{
-			destination[0][Step_Count]=points[2]; 
-		}
+		destination[0][Step_Count]=(points[2]-1)*50+25; 
 //		sum_X+=destination[0][Step_Count];
 	break;
-	case 'k': 
+	case 'Y': 
 //		points[5]=data[2]-'0';    //调试换算
 		points[5]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-
-		if(enter_direction==LEFT)
-		{
-			destination[0][Step_Count]=400-points[5]; 
-		}
-		else if(enter_direction==RIGHT)
-		{
-			destination[0][Step_Count]=points[5]; 
-		}
-		else
-		{
-			destination[1][Step_Count]=points[5]; 
-		}
-
-		if(data[0]=='b')
-		{
-			destination[3][Step_Count]=PASSING;
-		}
-		else if(data[0]=='q')
-		{
-			destination[3][Step_Count]=TAKING;
-		}
-		else if(data[0]=='f')
-		{
-			destination[3][Step_Count]=PUTTING;
-		}
-		else if(data[0]=='w')
-		{
-			destination[3][Step_Count]=WALL;
-		}
+		sum_Y+=points[5];
+//		sum_temp+=points[5];
+		destination[1][Step_Count]=(points[5]-1)*50+25; 
 //		sum_Y+=destination[1][Step_Count];
 		Step_Count++;
 		if(Step_Count==Step_Count_R)
@@ -217,18 +180,10 @@ void LINFlex_RX(void)
 			Send_Flag=1;
 		}
 	break;
-	case 'C': //是否执行吸棋子操作的标志位
+	case 'N': //是否执行吸棋子操作的标志位
 //		pramdata[2]=data[2]-'0';    //调试换算
 //		pram[0]=pramdata[2];    //调试换算
 		pram[0]=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		if(data[0]=='a')
-		{
-			enter_direction=LEFT;
-		}
-		else if(data[0]=='d')
-		{
-			enter_direction=RIGHT;
-		}
 		Step_Count_R=pram[0];
 	break;
 	case 'L':
@@ -248,18 +203,9 @@ void LINFlex_RX(void)
 //		points[1]=data[1]-'0';    //调试换算
 //		points[2]=data[2]-'0';    //调试换算
 //		X_location=points[0]*100+points[1]*10+points[2];    //调试换算
-		if(enter_direction==LEFT)
-		{
-			Y_location=(int16_t)(data[1]<<8|data[2]);    //实际换算
-		}
-		else if(enter_direction==RIGHT)
-		{
-			Y_location=400-(int16_t)(data[1]<<8|data[2]);
-		}
-		else
-		{
-			X_location=(int16_t)(data[1]<<8|data[2]);
-		}	
+
+		X_location=(int16_t)(data[1]<<8|data[2]);
+	
 //		
 	break;
 	case 'y': 
@@ -267,24 +213,60 @@ void LINFlex_RX(void)
 //		points[4]=data[1]-'0';	  //调试换算
 //		points[5]=data[2]-'0';    //调试换算
 //		Y_location=points[3]*100+points[4]*10+points[5];   //调试换算
-		if((enter_direction==LEFT))
-		{
-			X_location=400-(int16_t)(data[1]<<8|data[2]);     //实际换算
-		}
-		else if(enter_direction==RIGHT)
-		{
-			X_location=(int16_t)(data[1]<<8|data[2]); 
-		}
-		else
-		{
-			Y_location=(int16_t)(data[1]<<8|data[2]);
-		}
+
+		Y_location=(int16_t)(data[1]<<8|data[2]);
+
 		
 		last_time=STM.CNT.R;
 	break;
+	case 'p':
+		points[2]=(int16_t)(data[1]<<8|data[2]);
+		destination[0][0]=(points[2]-1)*50+25; 
+	break;
+	case 'q':
+		points[5]=(int16_t)(data[1]<<8|data[2]);
+		destination[1][0]=(points[5]-1)*50+25;
 	case 'a': 
 		theta=(int16_t)(data[1]<<8|data[2]);    //实际换算
 	break;
+
+	case 'j':
+		GPIO__output__enable(13);
+		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
+		if(data[0]=='a')
+		{
+			enter_direction=LEFT;
+			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+		else if(data[0]=='d')
+		{
+			enter_direction=RIGHT;
+			destination[1][Step_Count]=400-(int16_t)(data[1]<<8|data[2]);
+		}
+		else
+		{
+			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+	break;
+	case 'k':
+		if(data[0]=='a')
+		{
+			destination[0][Step_Count]=400-(int16_t)(data[1]<<8|data[2]); 
+		}
+		else if(data[0]=='d')
+		{
+			destination[0][Step_Count]=(int16_t)(data[1]<<8|data[2]); 
+		}
+		else
+		{
+			destination[1][Step_Count]=(int16_t)(data[1]<<8|data[2]);
+		}
+		Step_Count++;
+		if(Step_Count==Step_Count_R)
+		{
+			Start_Flag=1;
+			Send_Flag=1;
+		}
 	default:
 		initLINFlex_0_UART(12);
 	break;
