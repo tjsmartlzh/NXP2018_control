@@ -68,7 +68,7 @@ static float cos_theta,sin_theta;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
-#define far_threshold 70   //小轮�?70
+#define far_threshold 60   //小轮�?70
 #define near_threshold 7
 
 void Mode0_Quick(void);
@@ -150,7 +150,7 @@ int main(void)
 			switch(direction)
 			{
 			case(LEFT):
-				motor_output(motor_a[0],-0.5);
+				motor_output(motor_a[0],-0.5);  //小轮子0.8
 				motor_output(motor_a[1],0.5);
 				motor_output(motor_a[2],-0.5);
 				motor_output(motor_a[3],0.5);
@@ -190,13 +190,13 @@ void Mode0_Quick(void)
 	OLED_Str("v2 ");
 	OLED_Float(Target_D_X_R);
 
-	OLED_SetPointer(5,0);
-	OLED_Str("v3 ");
-	OLED_Float(cos_theta);
+	// OLED_SetPointer(5,0);
+	// OLED_Str("v3 ");
+	// OLED_Float(cos_theta);
 	
-	OLED_SetPointer(7,0);
-	OLED_Str("v4 ");
-	OLED_Float(sin_theta);
+	// OLED_SetPointer(7,0);
+	// OLED_Str("v4 ");
+	// OLED_Float(sin_theta);
 }
 
 void test1()
@@ -217,6 +217,13 @@ void test1()
 	if(stop_flag)
 	{
 		step++;
+		OLED_SetPointer(5,0);
+		OLED_Str("v3 ");
+		OLED_Float(X_location);
+		
+		OLED_SetPointer(7,0);
+		OLED_Str("v4 ");
+		OLED_Float(Y_location);
 //      Target_D_Y_R=destination[1][step]-Y_location;
 //	    Target_D_X_R=destination[0][step]-X_location;
 		stop_flag=0;
@@ -356,6 +363,7 @@ void test1()
 	}
 	else
 	{
+		SIU.GPDO[15].B.PDO=0;
 		if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
 		{
 			if(Target_D_Y_R>far_threshold) //�???????????????
@@ -475,14 +483,14 @@ void test1()
 			motor_a[2]->target_speed=0;
 			motor_a[3]->target_speed=0;
 			speed_control();
-			SIU.GPDO[14].B.PDO=1;
+			SIU.GPDO[14].B.PDO=0;
 			PIT__clear_flag(PIT_Timer1);
 			return;
 		}
 		
 		speed_control();
 	
-	SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
+	// SIU.GPDO[14].B.PDO=!SIU.GPDO[14].B.PDO;
 	PIT__clear_flag(PIT_Timer1);
 }
 
