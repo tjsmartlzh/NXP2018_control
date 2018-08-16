@@ -164,11 +164,11 @@ void LINFlex_RX(void)
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		if(enter_direction==LEFT)
 		{
-			destination[1][Step_Count]=points[2];
+			destination[1][Step_Count]=points[2]-16;
 		}
 		else if(enter_direction==RIGHT)
 		{
-			destination[1][Step_Count]=400-points[2];
+			destination[1][Step_Count]=400-points[2]-16;
 		}
 		else
 		{
