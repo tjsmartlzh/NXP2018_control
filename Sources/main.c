@@ -62,6 +62,7 @@ extern int img[128];
 extern int run_flag;
 extern int times;
 static int X_converse;
+extern int CCD_count;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
@@ -91,7 +92,7 @@ int main(void)
 	Encoder__config(&ecd[0],EMIOS_CH8,1,390,10,0.05,48);  //A8,D0(A2)
 	Encoder__config(&ecd[1],EMIOS_CH24,1,390,10,0.05,52);  //D12,D4(A1)
 	Encoder__config(&ecd[2],EMIOS_CH16,1,390,10,0.05,47);  //E0,C15
-	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.05,41);  //A0,C9鍘熸湰鏄埖鏈虹殑鏃跺熀锛屾澶勬殏涓嶈�铏戣埖鏈虹殑浣跨敤锛屾晠鏆傜敤鏉ュ仛杈撳叆妫��?????????????
+	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.05,41);  //A0,C9鍘熸湰鏄埖鏈虹殑鏃跺熀锛屾澶勬殏涓嶈�铏戣埖鏈虹殑浣跨敤锛屾晠鏆傜敤鏉ュ仛杈撳叆妫�ￄ1�7?????????????
 	Encoder__init(&ecd[0]);
 	Encoder__init(&ecd[1]); 
 	Encoder__init(&ecd[2]);
@@ -102,11 +103,11 @@ int main(void)
 	GPIO__output__enable(13);
 	GPIO__output__enable(71);  //E7 鎺ㄦ媺鏈烘�?
 	GPIO__output__enable(45);  //C13 鐢电閾?
-	GPIO__output__enable(44);  //C12 鍙冲墠鏂圭數纾侀�?????????????
-	GPIO__output__enable(40);  //C8 宸﹀墠鏂圭數纾侀�?????????????
+	GPIO__output__enable(44);  //C12 鍙冲墠鏂圭數纾侀ￄ1�7?????????????
+	GPIO__output__enable(40);  //C8 宸﹀墠鏂圭數纾侀ￄ1�7?????????????
 	SIU.GPDO[45].B.PDO=0; //0
 	// SIU.GPDO[71].B.PDO=1;
-	PIT__config(PIT_Timer1,10,64,test1,10);
+	 PIT__config(PIT_Timer1,10,64,test1,10);
 	str[0]=0x66;
 //	str[1]=0x55;
 //	str[2]=0x44;
@@ -114,11 +115,11 @@ int main(void)
 //	start_time=STM.CNT.R/1000;
 	while(1)
 	{
-//		if ((ccd_edge_detect(0,127,180,img)==1))
+//		if ((ccd_edge_detect(0,127,1000,img)==1))
 //		{
 ////			PIT__stop(PIT_Timer0);
 //			SIU.GPDO[15].B.PDO=0;
-//		}                             //璋冭瘯鐢?
+//		}                        
 		if((elec_flag==1))
 		{
 			PIT__stop(PIT_Timer1);
@@ -151,7 +152,7 @@ int main(void)
 			else if(destination[3][step-1]==WALL)
 			{
 				delay_ms(600);			
-				SIU.GPDO[44].B.PDO=!(step)%2;//姝ゅ杩樺簲鏈夌數纾侀搧鎿嶄綔
+				SIU.GPDO[44].B.PDO=!(step)%2;//姝ゅ杩樺簲鏈夌數纾侢�搧鎿嶄綔
 				SIU.GPDO[40].B.PDO=!(step)%2;
 				delay_ms(1000);
 			}
@@ -202,19 +203,19 @@ void Mode0_Quick(void)
 
 	OLED_SetPointer(1,0);
 	OLED_Str("v1 ");
-	OLED_Float(stop_flag);
+	OLED_Float(fabs(Target_D_Y_R));
 
 	OLED_SetPointer(3,0);
 	OLED_Str("v2 ");
-	OLED_Float(step);
+	OLED_Float(straight_flag);
 
-	// OLED_SetPointer(5,0);
-	// OLED_Str("v3 ");
-	// OLED_Float(destination[3][step]);
-	
-	// OLED_SetPointer(7,0);
-	// OLED_Str("v4 ");
-	// OLED_Float(Target_D_Y_R);
+//	OLED_SetPointer(5,0);
+//	OLED_Str("v3 ");
+//	OLED_Float(ccd_edge_detect(0,127,1000,img));
+//	
+//	OLED_SetPointer(7,0);
+//	OLED_Str("v4 ");
+//	OLED_Float(CCD_count);
 }
 
 void test1()
@@ -246,6 +247,7 @@ void test1()
 //	    Target_D_X_R=destination[0][step]-X_location;
 		stop_flag=0;
 		elec_flag=1;
+		straight_flag=1;
 		X_converse=0;
 		i=0;
 		j=0;
@@ -283,7 +285,7 @@ void test1()
 	motor_a[2]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[3]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	
-	//***************************瑙掑害鎺у�?????????????****************************//  
+	//***************************瑙掑害鎺уￄ1�7?????????????****************************//  
 	
 	Speed__bekommen(&ecd[0]);
 	if(Dir__bekommen(&ecd[0])) ecd[0]._speed=-(ecd[0]._speed);
@@ -298,7 +300,7 @@ void test1()
 	motor_a[2]->actual_speed=ecd[2]._speed;
 	motor_a[3]->actual_speed=ecd[3]._speed;
 	
-	//鍧愭爣绯诲師鐐逛负宸︿笂鏂?
+	//鍧愭爣绯诲師鐐��负宸︿笂鏂?
 	//************************璇诲彇杞﹂�***************************//
 	
 	// if((motor_a[0]->actual_speed<(-0.2)) && (motor_a[1]->actual_speed)<(-0.2))
@@ -325,7 +327,7 @@ void test1()
 	// 	}
 	// }
 	
-//����ΪС���Ӱ汾
+//����ΪС���Ӱ汾
 
 		if((motor_a[0]->actual_speed<(-0.15)) && (motor_a[1]->actual_speed)<(-0.15))  //behind
 		{
@@ -354,13 +356,13 @@ void test1()
 				// tiaozheng=1;
 			}
 		}
-//���Ǵ����Ӱ汾
+//���Ǵ����Ӱ汾
 
-	//*************************鍗″皵鏇兼护娉?****************************//
+	//*************************鍗��皵鏇兼护娉?****************************//
 	
 			if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
 			{
-				if(Target_D_Y_R>far_threshold) //�??????????????
+				if(Target_D_Y_R>far_threshold) //ￄ1�7??????????????
 				{
 					if(i<=80)
 					{
@@ -374,11 +376,11 @@ void test1()
 					}
 				else if((Target_D_Y_R<=far_threshold)&&(Target_D_Y_R>near_threshold)) 
 				{
-					if(destination[3][step]==WALL)
+					if((destination[3][step]==WALL) && (Target_D_Y_R<=20))
 					{
 						ccd_init();
-						SIU.GPDO[15].B.PDO=!SIU.GPDO[15].B.PDO;
-						if(ccd_edge_detect(0,127,180,img))
+						// SIU.GPDO[15].B.PDO=!SIU.GPDO[15].B.PDO;
+						if(ccd_edge_detect(0,127,1000,img))
 						{
 							straight_flag=0;
 							SIU.GPDO[15].B.PDO=0;
@@ -398,7 +400,7 @@ void test1()
 
 				}
 						
-				else if(Target_D_Y_R<=-far_threshold) //�??????????????
+				else if(Target_D_Y_R<=-far_threshold) //ￄ1�7??????????????
 				{	
 					if(i<=80)
 					{
@@ -412,11 +414,11 @@ void test1()
 				}
 				else if((Target_D_Y_R<=-near_threshold)&&(Target_D_Y_R>-far_threshold)) 
 				{
-					if(destination[3][step]==WALL)
+					if((destination[3][step]==WALL) && (Target_D_Y_R>=-20))
 					{
 						ccd_init();
-					SIU.GPDO[15].B.PDO=!SIU.GPDO[15].B.PDO;
-						if(ccd_edge_detect(0,127,180,img))
+					// SIU.GPDO[15].B.PDO=!SIU.GPDO[15].B.PDO;
+						if(ccd_edge_detect(0,127,1000,img))
 						{
 							straight_flag=0;
 							SIU.GPDO[15].B.PDO=0;
@@ -438,7 +440,7 @@ void test1()
 			else if((fabs(Target_D_Y_R)<=near_threshold) && (straight_flag==1))  straight_flag=0;
 			else if(((fabs(Target_D_X_R)>near_threshold) && (straight_flag==0)) || (X_converse==1))
 			{
-				if(Target_D_X_R>far_threshold)  //�??????????????
+				if(Target_D_X_R>far_threshold)  //ￄ1�7??????????????
 				{
 					if(k<=80)
 					{
@@ -462,7 +464,7 @@ void test1()
 					motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
 					motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
 				}
-				else if(Target_D_X_R<=-far_threshold)  //�??????????????
+				else if(Target_D_X_R<=-far_threshold)  //ￄ1�7??????????????
 				{
 					if(g<=80)
 					{
@@ -492,9 +494,9 @@ void test1()
 				straight_flag=1;
 			}
 	
-//С����0.4/0.45��0.65/0.35
+//С����0.4/0.45��0.65/0.35
 
-		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold)&&(step<Step_Count))//姝ゅ鍙兘鏈夌�?????????????
+		if((fabs(Target_D_X_R)<=near_threshold)&&(fabs(Target_D_Y_R)<=near_threshold)&&(step<Step_Count))//姝ゅ鍙兘鏈夌ￄ1�7?????????????
 		{
 			stop_flag=1;
 //			 SIU.GPDO[15].B.PDO=!SIU.GPDO[15].B.PDO;
@@ -519,13 +521,13 @@ void test1()
 
 	void speed_control()
 	{
-			//***********************閫熷害鎺у�?????????????******************************//
+			//***********************閫熷害鎺уￄ1�7?????????????******************************//
 		PID__config(&motor_a[0]->motor_pid,0.24f,1.25f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
 		PID__config(&motor_a[1]->motor_pid,0.24f,1.25f,0,10,10,70,10);
 		PID__config(&motor_a[2]->motor_pid,0.24f,1.25f,0,10,10,70,10);
 		PID__config(&motor_a[3]->motor_pid,0.24f,1.25f,0,10,10,70,10);
 		
-		//*****************************PID閰嶇�?????????????************************************//
+		//*****************************PID閰嶇ￄ1�7?????????????************************************//
 		
 		if((motor_a[0]->target_speed)*(motor_a[1]->target_speed)<0)
 		{

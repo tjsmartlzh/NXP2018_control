@@ -190,7 +190,8 @@ void LINFlex_RX(void)
 		}
 		else
 		{
-			destination[1][Step_Count]=points[5]; 
+			if(data[0]=='w') destination[1][Step_Count]=points[5]-16;
+			else             destination[1][Step_Count]=points[5]; 
 		}
 
 		if(data[0]=='b')

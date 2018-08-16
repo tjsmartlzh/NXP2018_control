@@ -11,6 +11,7 @@
 #include "oled.h"
 
 int img[128];
+int CCD_count;
 unsigned char *send;
 unsigned char putstring[]="Image";
 int ccd_threshold = 200; //默认200 可以根据上位机进行调整该阈值              1.200 2.?
@@ -106,13 +107,13 @@ uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 	uint8_t temp=0;
 	static uint8_t last,now;
 	static int count;
-	for(i = 0; i < 128; i++)
-	{
-		if(pic[i] >600)
-		{
-			return 0;
-		}
-	} //滤波
+	// for(i = 0; i < 128; i++)
+	// {
+	// 	if(pic[i] >600)
+	// 	{
+	// 		return 0;
+	// 	}
+	// } //滤波
 	for(i = 0; i < 128; i++)
 	{
 		//将CCD图像进行二值化
@@ -126,11 +127,12 @@ uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 //	OLED_SetPointer(3,0);
 //	OLED_Str("v3 ");
 //	OLED_Float(pic[63]); //调试用
-	OLED_Fill(0x00);
-	OLED_SetPointer(7,0);
-	OLED_Str("v4 ");
-	OLED_Float(temp); //调试用
-	if(temp >=100)  //end_pix-sta_pix
+	 OLED_Fill(0x00);
+	 OLED_SetPointer(7,0);
+	 OLED_Str("v4 ");
+	 OLED_Float(temp); //调试用
+	CCD_count=temp;
+	if(temp >=110)  //end_pix-sta_pix
 	{
 		if (last) 
 		 {
