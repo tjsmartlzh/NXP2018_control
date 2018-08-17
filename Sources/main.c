@@ -65,6 +65,7 @@ static int X_converse;
 static int WallArrive_flag;
 static int far_threshold;
 static float k_speed;
+static float cos_theta,sin_theta;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
@@ -335,6 +336,34 @@ void test1()
 	
 //����ΪС���Ӱ汾
 
+	if(destination[3][step]==WALL) { far_threshold=wall_far_threshold; k_speed=wall_k;}
+	else { far_threshold=chess_far_threshold; k_speed=chess_k;}
+
+	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
+	{
+		if(cos_theta>=0 && sin_theta>=0) //right_front
+		{
+			Target_D_Y_R=destination[1][step]-Y_location+13;
+			Target_D_X_R=destination[0][step]-X_location;
+		}
+		else if(cos_theta>=0 && sin_theta<0) //left_front
+		{
+			Target_D_Y_R=destination[1][step]-Y_location+13;
+			Target_D_X_R=destination[0][step]-X_location+3;
+		}
+		else if(cos_theta<0 && sin_theta>=0) //right_behind
+		{
+			Target_D_Y_R=destination[1][step]-Y_location-13;
+			Target_D_X_R=destination[0][step]-X_location-3;
+		}
+		else if(cos_theta<0 && sin_theta<0) //left_behind
+		{
+			Target_D_Y_R=destination[1][step]-Y_location-13;
+			Target_D_X_R=destination[0][step]-X_location+3;
+		}
+	}
+	else
+	{
 		if((motor_a[0]->actual_speed<(-0.15)) && (motor_a[1]->actual_speed)<(-0.15))  //behind
 		{
 			Target_D_Y_R=destination[1][step]-Y_location-5;
@@ -362,7 +391,11 @@ void test1()
 				// tiaozheng=1;
 			}
 		}
+	}
 //���Ǵ����Ӱ汾
+
+	cos_theta=-Target_D_Y_R/(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R));
+	sin_theta= Target_D_X_R/(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R));
 
 	//*************************鍗��皵鏇兼护娉?****************************//
 	
@@ -379,25 +412,36 @@ void test1()
 				}
 			}
 
-			if(destination[3][step]==WALL) { far_threshold=wall_far_threshold; k_speed=wall_k;}
-			else { far_threshold=chess_far_threshold; k_speed=chess_k;}
-
-			if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
+	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
+	{
+//			if(i<=100)
+//			{
+		quick_speed=0.75; //涔嬪墠0.75
+//				i++;
+//			}
+		motor_a[0]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta - motor_a[0]->angel_speed;
+		motor_a[1]->target_speed=quick_speed*cos_theta - quick_speed*sin_theta - motor_a[0]->angel_speed;
+		motor_a[2]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta + motor_a[0]->angel_speed;
+		motor_a[3]->target_speed=quick_speed*cos_theta - quick_speed*sin_theta + motor_a[0]->angel_speed;
+	}
+	else
+	{
+		if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
+		{
+			if(Target_D_Y_R>far_threshold) //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
 			{
-				if(Target_D_Y_R>far_threshold) //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
+				if(i<=80)
 				{
-					if(i<=80)
-					{
-						quick_speed=0.4+0.35*i/80;
-						i++;
-					}
-					motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=-quick_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=-quick_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=-quick_speed+motor_a[3]->angel_speed;
-					}
-				else if((Target_D_Y_R<=far_threshold)&&(Target_D_Y_R>near_threshold)) 
-				{
+					quick_speed=0.4+0.35*i/80;
+					i++;
+				}
+				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-quick_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-quick_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-quick_speed+motor_a[3]->angel_speed;
+				}
+			else if((Target_D_Y_R<=far_threshold)&&(Target_D_Y_R>near_threshold)) 
+			{
 					// OLED_SetPointer(1,0);
 					// OLED_Str("v1 ");
 					// OLED_Float(X_location);
@@ -418,32 +462,32 @@ void test1()
 					// 	}
 					// }
 
-					if(j<=50)
-					{
-						slow_speed=0.4-k_speed*j/50;
-						j++;
-					}
-					motor_a[0]->target_speed=-slow_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=-slow_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
-
-				}
-						
-				else if(Target_D_Y_R<=-far_threshold) //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
-				{	
-					if(i<=80)
-					{
-						quick_speed=0.4+0.35*i/80;
-						i++;
-					}
-					motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=quick_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=quick_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=quick_speed+motor_a[3]->angel_speed;
-				}
-				else if((Target_D_Y_R<=-near_threshold)&&(Target_D_Y_R>-far_threshold)) 
+				if(j<=50)
 				{
+					slow_speed=0.4-k_speed*j/50;
+					j++;
+				}
+				motor_a[0]->target_speed=-slow_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-slow_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
+
+			}
+						
+			else if(Target_D_Y_R<=-far_threshold) //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
+			{	
+				if(i<=80)
+				{
+					quick_speed=0.4+0.35*i/80;
+					i++;
+				}
+				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=quick_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=quick_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=quick_speed+motor_a[3]->angel_speed;
+			}
+			else if((Target_D_Y_R<=-near_threshold)&&(Target_D_Y_R>-far_threshold)) 
+			{
 					// OLED_SetPointer(1,0);
 					// OLED_Str("v1 ");
 					// OLED_Float(fabs(Target_D_Y_R));
@@ -464,73 +508,74 @@ void test1()
 					// 	}
 					// }
 
-					if(j<=50)
-			    	{
-			 			slow_speed=0.4-k_speed*j/50;
-						j++;
-					}
-					motor_a[0]->target_speed=slow_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=slow_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
+				if(j<=50)
+				{
+					slow_speed=0.4-k_speed*j/50;
+					j++;
 				}
+				motor_a[0]->target_speed=slow_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=slow_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
 			}
-			else if((fabs(Target_D_Y_R)<=near_threshold) && (straight_flag==1))  straight_flag=0;
-			else if(((fabs(Target_D_X_R)>near_threshold) && (straight_flag==0)) || (X_converse==1))
+		}
+		else if((fabs(Target_D_Y_R)<=near_threshold) && (straight_flag==1))  straight_flag=0;
+		else if(((fabs(Target_D_X_R)>near_threshold) && (straight_flag==0)) || (X_converse==1))
+		{
+			if(Target_D_X_R>far_threshold)  //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
 			{
-				if(Target_D_X_R>far_threshold)  //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
+				if(k<=80)
 				{
-					if(k<=80)
-					{
-						quick_speed=0.4+0.35*k/80;
-						k++;
-					}
-					motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=-quick_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=quick_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=-quick_speed+motor_a[3]->angel_speed;
+					quick_speed=0.4+0.35*k/80;
+					k++;
 				}
-				else if((Target_D_X_R<=far_threshold)&&(Target_D_X_R>near_threshold))  
-				{
-					if(j<=50)
-					{
-						slow_speed=0.4-k_speed*j/50;
-						j++;
-					}
-					motor_a[0]->target_speed=slow_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=-slow_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
-				}
-				else if(Target_D_X_R<=-far_threshold)  //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
-				{
-					if(g<=80)
-					{
-						quick_speed=0.4+0.35*g/80;
-						g++;
-					}
-					motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=quick_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=-quick_speed+motor_a[2]->angel_speed;
-					motor_a[3]->target_speed=quick_speed+motor_a[3]->angel_speed;
-				}
-				else if((Target_D_X_R<=-near_threshold)&&(Target_D_X_R>-far_threshold))  
-				{
-					if(j<=50)
-					{
-						slow_speed=0.4-k_speed*j/50;
-						j++;
-					}
-					motor_a[0]->target_speed=-slow_speed-motor_a[0]->angel_speed;
-					motor_a[1]->target_speed=slow_speed-motor_a[1]->angel_speed;
-					motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
-		    		motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
-				}
+				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-quick_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=quick_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-quick_speed+motor_a[3]->angel_speed;
 			}
-			else if(((fabs(Target_D_Y_R)>near_threshold)&&(fabs(Target_D_X_R)<=near_threshold)&&(straight_flag==0)))
+			else if((Target_D_X_R<=far_threshold)&&(Target_D_X_R>near_threshold))  
 			{
-				straight_flag=1;
+				if(j<=50)
+				{
+					slow_speed=0.4-k_speed*j/50;
+					j++;
+				}
+				motor_a[0]->target_speed=slow_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=-slow_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
 			}
+			else if(Target_D_X_R<=-far_threshold)  //ￄ1�71ￄ1�771ￄ1�71ￄ1�777??????????????
+			{
+				if(g<=80)
+				{
+					quick_speed=0.4+0.35*g/80;
+					g++;
+				}
+				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=quick_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-quick_speed+motor_a[2]->angel_speed;
+				motor_a[3]->target_speed=quick_speed+motor_a[3]->angel_speed;
+			}
+			else if((Target_D_X_R<=-near_threshold)&&(Target_D_X_R>-far_threshold))  
+			{
+				if(j<=50)
+				{
+					slow_speed=0.4-k_speed*j/50;
+					j++;
+				}
+				motor_a[0]->target_speed=-slow_speed-motor_a[0]->angel_speed;
+				motor_a[1]->target_speed=slow_speed-motor_a[1]->angel_speed;
+				motor_a[2]->target_speed=-slow_speed+motor_a[2]->angel_speed;
+		  		motor_a[3]->target_speed=slow_speed+motor_a[3]->angel_speed;
+			}
+		}
+		else if(((fabs(Target_D_Y_R)>near_threshold)&&(fabs(Target_D_X_R)<=near_threshold)&&(straight_flag==0)))
+		{
+			straight_flag=1;
+		}
+	}
 	
 //С����0.4/0.45��0.65/0.35
 
