@@ -164,11 +164,17 @@ void LINFlex_RX(void)
 		SIU.GPDO[13].B.PDO=!SIU.GPDO[13].B.PDO;
 		if(enter_direction==LEFT)
 		{
-			destination[1][Step_Count]=points[2]-16;
+			if(data[0]=='w') destination[1][Step_Count]=points[2]-16;
+			else             destination[1][Step_Count]=points[2];
 		}
 		else if(enter_direction==RIGHT)
 		{
-			destination[1][Step_Count]=400-points[2]-16;
+			if(data[0]=='w') destination[1][Step_Count]=400-points[2]-16;
+			else             destination[1][Step_Count]=400-points[2];
+		}
+		else if(enter_direction==BEHIND)
+		{
+			destination[0][Step_Count]=400-points[2];
 		}
 		else
 		{
@@ -187,6 +193,11 @@ void LINFlex_RX(void)
 		else if(enter_direction==RIGHT)
 		{
 			destination[0][Step_Count]=points[5]; 
+		}
+		else if(enter_direction==BEHIND)
+		{
+			if(data[0]=='w') destination[1][Step_Count]=400-points[5]-16;
+			else             destination[1][Step_Count]=400-points[5];
 		}
 		else
 		{
@@ -230,6 +241,10 @@ void LINFlex_RX(void)
 		{
 			enter_direction=RIGHT;
 		}
+		else if(data[0]=='s')
+		{
+			enter_direction=BEHIND;
+		}
 		Step_Count_R=pram[0];
 	break;
 	case 'L':
@@ -257,6 +272,10 @@ void LINFlex_RX(void)
 		{
 			Y_location=400-(int16_t)(data[1]<<8|data[2]);
 		}
+		else if(enter_direction==BEHIND)
+		{
+			X_location=400-(int16_t)(data[1]<<8|data[2]);
+		}
 		else
 		{
 			X_location=(int16_t)(data[1]<<8|data[2]);
@@ -275,6 +294,10 @@ void LINFlex_RX(void)
 		else if(enter_direction==RIGHT)
 		{
 			X_location=(int16_t)(data[1]<<8|data[2]); 
+		}
+		else if(enter_direction==BEHIND)
+		{
+			Y_location=400-(int16_t)(data[1]<<8|data[2]); 
 		}
 		else
 		{
