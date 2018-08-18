@@ -29,10 +29,7 @@ typedef struct
 #define FORWARD 3
 #define BEHIND 4
 #define CHESS 0
-#define WALL 4
-#define PASSING 1
-#define TAKING 2
-#define PUTTING 3
+#define WALL 1
 
 void LINFlex_TX(unsigned char data);
 void LINFlex_3TX(unsigned char data);
