@@ -68,7 +68,7 @@ static float cos_theta,sin_theta;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
-#define far_threshold 60   //小轮�???70
+#define far_threshold 60   //小轮�????70
 #define near_threshold 7
 
 void Mode0_Quick(void);
@@ -90,10 +90,10 @@ int main(void)
 	motor_a[1]=&(Motor[1]);
 	motor_a[2]=&(Motor[2]);
 	motor_a[3]=&(Motor[3]);
-	Encoder__config(&ecd[0],EMIOS_CH8,1,390,10,0.05,48);  //A8,D0(A2)     //小轮子应为错误半�???0.0574
+	Encoder__config(&ecd[0],EMIOS_CH8,1,390,10,0.05,48);  //A8,D0(A2)     //小轮子应为错误半�????0.0574
 	Encoder__config(&ecd[1],EMIOS_CH24,1,390,10,0.05,52);  //D12,D4(A1)
 	Encoder__config(&ecd[2],EMIOS_CH16,1,390,10,0.05,47);  //E0,C15
-	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.05,41);  //A0,C9原本是舵机的时基，此处暂不考虑舵机的使用，故暂用来做输入检�??????
+	Encoder__config(&ecd[3],EMIOS_CH0,1,390,10,0.05,41);  //A0,C9原本是舵机的时基，此处暂不考虑舵机的使用，故暂用来做输入检�???????
 	Encoder__init(&ecd[0]);
 	Encoder__init(&ecd[1]); 
 	Encoder__init(&ecd[2]);
@@ -103,7 +103,7 @@ int main(void)
 	GPIO__output__enable(12);
 	GPIO__output__enable(13);
 	GPIO__output__enable(71);  //E7 推拉机构
-	GPIO__output__enable(45);  //C13 电磁�??????
+	GPIO__output__enable(45);  //C13 电磁�???????
 	 SIU.GPDO[45].B.PDO=0; 
 	// SIU.GPDO[71].B.PDO=1;
 	PIT__config(PIT_Timer1,10,64,test1,10);
@@ -117,7 +117,7 @@ int main(void)
 //		if ((ccd_edge_detect(0,127,200,img)==1))
 //		{
 //			SIU.GPDO[15].B.PDO=0;
-//		}                             //调试�??????
+//		}                             //调试�???????
 		if((elec_flag==1))
 		{
 //			Mode0_Quick();
@@ -132,7 +132,7 @@ int main(void)
 			delay_ms(200);
 			 SIU.GPDO[45].B.PDO=step%2;
 			if(step%2) delay_ms(500);
-			else       delay_ms(200);
+			else                    ;
 			SIU.GPDO[71].B.PDO=1;
 			delay_ms(200);
 			elec_flag=0;
@@ -151,7 +151,7 @@ int main(void)
 			switch(direction)
 			{
 			case(LEFT):
-				motor_output(motor_a[0],-0.5);  //小轮�??0.8
+				motor_output(motor_a[0],-0.5);  //小轮�???0.8
 				motor_output(motor_a[1],0.5);
 				motor_output(motor_a[2],-0.5);
 				motor_output(motor_a[3],0.5);
@@ -261,7 +261,7 @@ void test1()
 	
 	//**********************************************************************//
 	if(fabs(theta - 900)>80) omiga=-0.44;
-	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //正为逆时针，负为顺时�??????
+	if((fabs(theta - 900)<=80)&&(fabs(theta - 900)>-80)) omiga=-0.55*(theta - 900)/100.0f; //正为逆时针，负为顺时�???????
 	if(fabs(theta - 900)<=-80) omiga=0.44;
 	motor_a[0]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
 	motor_a[1]->angel_speed=omiga*(half_track_dis + half_wheel_dis);
@@ -283,7 +283,7 @@ void test1()
 	motor_a[2]->actual_speed=ecd[2]._speed;
 	motor_a[3]->actual_speed=ecd[3]._speed;
 	
-	//坐标系原点为左上�??????
+	//坐标系原点为左上�???????
 	//************************读取车�?***************************//
 
 	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
@@ -348,7 +348,7 @@ void test1()
 	cos_theta=-Target_D_Y_R/(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R));
 	sin_theta= Target_D_X_R/(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R));
 	
-	//*************************卡尔曼滤�??????****************************//
+	//*************************卡尔曼滤�???????****************************//
 	
 	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
 	{
@@ -367,11 +367,11 @@ void test1()
 		SIU.GPDO[15].B.PDO=0;
 		if((fabs(Target_D_Y_R)>near_threshold) && (straight_flag==1))
 		{
-			if(Target_D_Y_R>far_threshold) //�?????????????????
+			if(Target_D_Y_R>far_threshold) //�??????????????????
 			{
 				if(i<=80)
 				{
-					quick_speed=0.4+0.35*i/80;     //小轮�???0.4/0.8
+					quick_speed=0.4+0.35*i/80;     //小轮�????0.4/0.8
 					i++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
@@ -383,7 +383,7 @@ void test1()
 			{
 				if(j<=50)
 				{
-					slow_speed=0.5-0.32*j/50;    //小轮�???0.65/0.35
+					slow_speed=0.5-0.32*j/50;    //小轮�????0.65/0.35
 					j++;
 				}
 				motor_a[0]->target_speed=-slow_speed-motor_a[0]->angel_speed;
@@ -393,7 +393,7 @@ void test1()
 
 			}
 					
-			else if(Target_D_Y_R<=-far_threshold) //�?????????????????
+			else if(Target_D_Y_R<=-far_threshold) //�??????????????????
 			{	
 				if(i<=80)
 				{
@@ -421,7 +421,7 @@ void test1()
 		else if((fabs(Target_D_Y_R)<=near_threshold) && (straight_flag==1))  straight_flag=0;
 		else if(((fabs(Target_D_X_R)>near_threshold) && (straight_flag==0)) || (X_converse==1))
 		{
-			if(Target_D_X_R>far_threshold)  //�?????????????????
+			if(Target_D_X_R>far_threshold)  //�??????????????????
 			{
 				if(k<=80)
 				{
@@ -445,7 +445,7 @@ void test1()
 				motor_a[2]->target_speed=slow_speed+motor_a[2]->angel_speed;
 				motor_a[3]->target_speed=-slow_speed+motor_a[3]->angel_speed;
 			}
-			else if(Target_D_X_R<=-far_threshold)  //�?????????????????
+			else if(Target_D_X_R<=-far_threshold)  //�??????????????????
 			{
 				if(g<=80)
 				{
@@ -530,7 +530,7 @@ void speed_control()
 	if(motor_a[3]->duty>1.0f) motor_a[3]->duty=1.0f;
 	if(motor_a[3]->duty<-1.0f) motor_a[3]->duty=-1.0f;
 	
-	//***************************车速限�??????***********************************//
+	//***************************车速限�???????***********************************//
 	
 	motor_output(motor_a[0],motor_a[0]->duty);
 	motor_output(motor_a[1],motor_a[1]->duty);
