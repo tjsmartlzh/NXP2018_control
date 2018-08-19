@@ -24,8 +24,8 @@ void ccd_init()
 	SIU.PCR[26].R = 0x2100;     // 定义ccd的AO 端口    B10
 	GPIO__output__enable(33);   // 定义ccd的SI 端口    C1
 	GPIO__output__enable(36);   // 定义ccd的CLK端口    C4
-	PIT__config(PIT_Timer0,5,64,ccd_capture,11);
-	//    PIT__config(PIT_Timer2,10,64,ccd_threshold_detect,12);//用于阈值确定
+	PIT__config(PIT_Timer0,5,64,ccd_capture,13);
+//	PIT__config(PIT_Timer2,10,64,ccd_threshold_detect,12);//用于阈值确定
 }
 
 void ccd_capture()
@@ -85,8 +85,8 @@ void ccd_threshold_detect()
 	{
 		for(i = 0;i<128;i++)
 		{
-			BlueTx(Int_to_char(i));
-			BlueTx(format);
+//			BlueTx(Int_to_char(i));
+//			BlueTx(format);
 			if(i==0)
 			{
 				LINFlex_TX('B');
@@ -96,7 +96,7 @@ void ccd_threshold_detect()
 		}
 		ccd_send_flag = 0;
 	}
-	ccd_max_min_send(ccd_temp_img);
+//	ccd_max_min_send(ccd_temp_img);
 	PIT__clear_flag(PIT_Timer2);
 }
 uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
@@ -106,14 +106,13 @@ uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 	uint8_t temp=0;
 	static uint8_t last,now;
 	static int count;
-	count++;
-	// for(i = 0; i < 128; i++)
-	// {
-	// 	if(pic[i] >600)
-	// 	{
-	// 		return 0;
-	// 	}
-	// } //滤波
+	for(i = 0; i < 128; i++)
+	{
+		if(pic[i] >600)
+		{
+			return 0;
+		}
+	}
 	for(i = 0; i < 128; i++)
 	{
 		//将CCD图像进行二值化
@@ -127,14 +126,11 @@ uint8_t ccd_edge_detect(uint8_t sta_pix,uint8_t end_pix,int threshold,int pic[])
 //	OLED_SetPointer(3,0);
 //	OLED_Str("v3 ");
 //	OLED_Float(pic[63]); //调试用
-// if(count%10==0)
-// {
-	 OLED_Fill(0x00);
-	 OLED_SetPointer(7,0);
-	 OLED_Str("v4 ");
-	 OLED_Num(temp); //调试用
-// }
-	if(temp >=100)  //end_pix-sta_pix
+//	OLED_Fill(0x00);
+//	OLED_SetPointer(7,0);
+//	OLED_Str("v4 ");
+//	OLED_Float(temp); //调试用
+	if(temp >=126)  //end_pix-sta_pix
 	{
 		if (last) 
 		 {
