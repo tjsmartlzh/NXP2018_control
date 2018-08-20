@@ -56,7 +56,7 @@ extern int mode;
 static float rotating_duty;
 static int finish_flag=0;
 extern int enter_direction,temp;
-static int j=0,i=0,g=0,k=0;
+static int j=0,i=0,g=0,k=0,m=0;
 static float quick_speed,slow_speed;
 extern int img[128];
 extern int run_flag;
@@ -68,7 +68,7 @@ static float cos_theta,sin_theta;
 
 #define half_track_dis 0.21 
 #define half_wheel_dis 0.16 
-#define far_threshold 60   //小轮�????70
+#define far_threshold 58   //小轮�????70
 #define near_threshold 7
 
 void Mode0_Quick(void);
@@ -236,6 +236,7 @@ void test1()
 		j=0;
 		g=0; //this is a try
 		k=0; //this is a try
+		m=0;
 		motor_a[0]->target_speed=0;
 		motor_a[1]->target_speed=0;
 		motor_a[2]->target_speed=0;
@@ -286,12 +287,12 @@ void test1()
 	//坐标系原点为左上�???????
 	//************************读取车�?***************************//
 
-	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
+	if((sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold) && (fabs(destination[1][step]-Y_location)>near_threshold) && (fabs(destination[0][step]-X_location)>near_threshold))
 	{
 		if(cos_theta>=0 && sin_theta>=0) //right_front
 		{
 			Target_D_Y_R=destination[1][step]-Y_location+13;
-			Target_D_X_R=destination[0][step]-X_location-13;
+			Target_D_X_R=destination[0][step]-X_location+7.5;  //-13
 		}
 		else if(cos_theta>=0 && sin_theta<0) //left_front
 		{
@@ -306,7 +307,7 @@ void test1()
 		else if(cos_theta<0 && sin_theta<0) //left_behind
 		{
 			Target_D_Y_R=destination[1][step]-Y_location-13;
-			Target_D_X_R=destination[0][step]-X_location+13;
+			Target_D_X_R=destination[0][step]-X_location-5;
 		}
 	}
 	else
@@ -332,7 +333,7 @@ void test1()
 			}
 			else
 			{
-				Target_D_Y_R=destination[1][step]-Y_location+6;
+				Target_D_Y_R=destination[1][step]-Y_location+4;
 				Target_D_X_R=destination[0][step]-X_location;
 				// tiaozheng=1;
 			}
@@ -350,13 +351,13 @@ void test1()
 	
 	//*************************卡尔曼滤�???????****************************//
 	
-	if(sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold)
+	if((sqrt(Target_D_Y_R*Target_D_Y_R+Target_D_X_R*Target_D_X_R)>far_threshold) && (fabs(destination[1][step]-Y_location)>near_threshold) && (fabs(destination[0][step]-X_location)>near_threshold))
 	{
-//			if(i<=100)
-//			{
-				quick_speed=0.8; //之前0.75
-//				i++;
-//			}
+			if(m<=80)
+			{
+				quick_speed=0.4+0.4*m/80;  //之前0.75
+				m++;
+			}
 			motor_a[0]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta - motor_a[0]->angel_speed;
 			motor_a[1]->target_speed=quick_speed*cos_theta - quick_speed*sin_theta - motor_a[0]->angel_speed;
 			motor_a[2]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta + motor_a[0]->angel_speed;
@@ -369,9 +370,9 @@ void test1()
 		{
 			if(Target_D_Y_R>far_threshold) //�??????????????????
 			{
-				if(i<=120)
+				if(i<=80)
 				{
-					quick_speed=0.4+0.4*i/120;     //小轮�????0.4/0.8
+					quick_speed=0.4+0.4*i/80;     //小轮�????0.4/0.8
 					i++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
@@ -395,9 +396,9 @@ void test1()
 					
 			else if(Target_D_Y_R<=-far_threshold) //�??????????????????
 			{	
-				if(i<=120)
+				if(i<=80)
 				{
-					quick_speed=0.4+0.4*i/120;
+					quick_speed=0.4+0.4*i/80;
 					i++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -423,9 +424,9 @@ void test1()
 		{
 			if(Target_D_X_R>far_threshold)  //�??????????????????
 			{
-				if(k<=120)
+				if(k<=80)
 				{
-					quick_speed=0.4+0.4*k/120;
+					quick_speed=0.4+0.4*k/80;
 					k++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -447,9 +448,9 @@ void test1()
 			}
 			else if(Target_D_X_R<=-far_threshold)  //�??????????????????
 			{
-				if(g<=120)
+				if(g<=80)
 				{
-					quick_speed=0.4+0.4*g/120;
+					quick_speed=0.4+0.4*g/80;
 					g++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
