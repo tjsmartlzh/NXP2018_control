@@ -128,9 +128,9 @@ int main(void)
 			motor_output(motor_a[2],0);
 			motor_output(motor_a[3],0);
 			
+			// delay_ms(200);
 			SIU.GPDO[71].B.PDO=!(step%2);
-			delay_ms(200);
-			 SIU.GPDO[45].B.PDO=step%2;
+			SIU.GPDO[45].B.PDO=step%2;
 			if(step%2) delay_ms(500);
 			else                    ;
 			SIU.GPDO[71].B.PDO=1;
@@ -296,7 +296,7 @@ void test1()
 		else if(cos_theta>=0 && sin_theta<0) //left_front
 		{
 			Target_D_Y_R=destination[1][step]-Y_location+13;
-			Target_D_X_R=destination[0][step]-X_location-7.5;
+			Target_D_X_R=destination[0][step]-X_location-7.5;  //-7.5
 		}
 		else if(cos_theta<0 && sin_theta>=0) //right_behind
 		{
@@ -354,7 +354,7 @@ void test1()
 	{
 //			if(i<=100)
 //			{
-				quick_speed=0.75; //ä¹‹å‰0.75
+				quick_speed=0.8; //ä¹‹å‰0.75
 //				i++;
 //			}
 			motor_a[0]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta - motor_a[0]->angel_speed;
@@ -369,9 +369,9 @@ void test1()
 		{
 			if(Target_D_Y_R>far_threshold) //ï¿??????????????????
 			{
-				if(i<=80)
+				if(i<=120)
 				{
-					quick_speed=0.4+0.35*i/80;     //å°è½®ï¿????0.4/0.8
+					quick_speed=0.4+0.4*i/120;     //å°è½®ï¿????0.4/0.8
 					i++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
@@ -395,9 +395,9 @@ void test1()
 					
 			else if(Target_D_Y_R<=-far_threshold) //ï¿??????????????????
 			{	
-				if(i<=80)
+				if(i<=120)
 				{
-					quick_speed=0.4+0.35*i/80;
+					quick_speed=0.4+0.4*i/120;
 					i++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -423,9 +423,9 @@ void test1()
 		{
 			if(Target_D_X_R>far_threshold)  //ï¿??????????????????
 			{
-				if(k<=80)
+				if(k<=120)
 				{
-					quick_speed=0.4+0.35*k/80;
+					quick_speed=0.4+0.4*k/120;
 					k++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -447,9 +447,9 @@ void test1()
 			}
 			else if(Target_D_X_R<=-far_threshold)  //ï¿??????????????????
 			{
-				if(g<=80)
+				if(g<=120)
 				{
-					quick_speed=0.4+0.35*g/80;
+					quick_speed=0.4+0.4*g/120;
 					g++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
