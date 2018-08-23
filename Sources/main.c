@@ -63,6 +63,7 @@ extern int run_flag;
 extern int times;
 static int X_converse;
 static float cos_theta,sin_theta;
+//extern float quick,slow,far_threshold;
 // static int tiaozheng=0;
 
 
@@ -131,10 +132,10 @@ int main(void)
 			// delay_ms(200);
 			SIU.GPDO[71].B.PDO=!(step%2);
 			SIU.GPDO[45].B.PDO=step%2;
-			if(step%2) delay_ms(500);
+			if(step%2) delay_ms(350);
 			else                    ;
 			SIU.GPDO[71].B.PDO=1;
-			delay_ms(200);
+			delay_ms(100);
 			elec_flag=0;
 			PIT__restart(PIT_Timer1);
 //			LINFLEX_0.UARTCR.B.RXEN = 1;
@@ -292,22 +293,22 @@ void test1()
 		if(cos_theta>=0 && sin_theta>=0) //right_front
 		{
 			Target_D_Y_R=destination[1][step]-Y_location+13;
-			Target_D_X_R=destination[0][step]-X_location+7.5;  //-13
+			Target_D_X_R=destination[0][step]-X_location+9;  //+7.5
 		}
 		else if(cos_theta>=0 && sin_theta<0) //left_front
 		{
 			Target_D_Y_R=destination[1][step]-Y_location+13;
-			Target_D_X_R=destination[0][step]-X_location-7.5;  //-7.5
+			Target_D_X_R=destination[0][step]-X_location-9;  //-7.5
 		}
 		else if(cos_theta<0 && sin_theta>=0) //right_behind
 		{
 			Target_D_Y_R=destination[1][step]-Y_location-13;
-			Target_D_X_R=destination[0][step]-X_location+5;
+			Target_D_X_R=destination[0][step]-X_location+6.5; //+5
 		}
 		else if(cos_theta<0 && sin_theta<0) //left_behind
 		{
 			Target_D_Y_R=destination[1][step]-Y_location-13;
-			Target_D_X_R=destination[0][step]-X_location-5;
+			Target_D_X_R=destination[0][step]-X_location-6.5; //-5
 		}
 	}
 	else
@@ -355,7 +356,7 @@ void test1()
 	{
 			if(m<=80)
 			{
-				quick_speed=0.4+0.45*m/80;  //之前0.75
+				quick_speed=0.4+0.5*m/80;  //之前0.75
 				m++;
 			}
 			motor_a[0]->target_speed=quick_speed*cos_theta + quick_speed*sin_theta - motor_a[0]->angel_speed;
@@ -372,7 +373,7 @@ void test1()
 			{
 				if(i<=80)
 				{
-					quick_speed=0.4+0.45*i/80;     //小轮�????0.4/0.8
+					quick_speed=0.4+0.5*i/80;     //小轮�????0.4/0.8
 					i++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
@@ -398,7 +399,7 @@ void test1()
 			{	
 				if(i<=80)
 				{
-					quick_speed=0.4+0.45*i/80;
+					quick_speed=0.4+0.5*i/80;
 					i++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -426,7 +427,7 @@ void test1()
 			{
 				if(k<=80)
 				{
-					quick_speed=0.4+0.45*k/80;
+					quick_speed=0.4+0.5*k/80;
 					k++;
 				}
 				motor_a[0]->target_speed=quick_speed-motor_a[0]->angel_speed;
@@ -450,7 +451,7 @@ void test1()
 			{
 				if(g<=80)
 				{
-					quick_speed=0.4+0.45*g/80;
+					quick_speed=0.4+0.5*g/80;
 					g++;
 				}
 				motor_a[0]->target_speed=-quick_speed-motor_a[0]->angel_speed;
@@ -498,10 +499,10 @@ void test1()
 
 void speed_control()
 {
-	PID__config(&motor_a[0]->motor_pid,0.24f,1.25f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
-	PID__config(&motor_a[1]->motor_pid,0.24f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[2]->motor_pid,0.24f,1.25f,0,10,10,70,10);
-	PID__config(&motor_a[3]->motor_pid,0.24f,1.25f,0,10,10,70,10);
+	PID__config(&motor_a[0]->motor_pid,0.45f,1.9f,0,10,10,70,10); //   0.16p 1.00i  //  0.64p 1.25i
+	PID__config(&motor_a[1]->motor_pid,0.45f,1.9f,0,10,10,70,10);
+	PID__config(&motor_a[2]->motor_pid,0.45f,1.9f,0,10,10,70,10);
+	PID__config(&motor_a[3]->motor_pid,0.45f,1.9f,0,10,10,70,10);
 	
 	//*****************************PID配置************************************//
 	

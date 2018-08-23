@@ -44,7 +44,7 @@ int exit_flag;
 int mode;
 int enter_direction=0;
 int temp;
-
+//float quick=0.85,slow=0.25,far_threshold=58;
 
 void LINFlex_TX(unsigned char data)
 {
@@ -156,6 +156,11 @@ void LINFlex_RX(void)
 	temp=data[3];
 	switch (temp)
 	{
+	case 'V':
+		quick=data[0]/100.0f;
+		slow=data[1]/100.0f;
+		far_threshold=data[2];
+	break;
 	case 'X':
 		temp=data[0];
 //		points[2]=data[2]-'0';    //µ÷ÊÔ»»Ëã
